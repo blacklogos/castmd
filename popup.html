@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      width: 320px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #282a36;
+      color: #f8f8f2;
+      margin: 0;
+    }
+
+    .section {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #44475a;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      background-color: #44475a;
+      color: #f8f8f2;
+    }
+
+    button:hover {
+      background-color: #6272a4;
+    }
+
+    .url-input {
+      margin-bottom: 12px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      background-color: #44475a;
+      color: #f8f8f2;
+      border: 1px solid #6272a4;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #bd93f9;
+    }
+
+    #status, #result {
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 12px;
+      background-color: #44475a;
+      font-size: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    #result pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 8px 0;
+    }
+
+    .success { 
+      background-color: #44475a; 
+      color: #50fa7b;
+      border-left: 4px solid #50fa7b;
+    }
+    
+    .error { 
+      background-color: #44475a; 
+      color: #ff5555;
+      border-left: 4px solid #ff5555;
+    }
+    
+    .warning { 
+      background-color: #44475a; 
+      color: #f1fa8c;
+      border-left: 4px solid #f1fa8c;
+    }
+    
+    .info { 
+      background-color: #44475a; 
+      color: #8be9fd;
+      border-left: 4px solid #8be9fd;
+    }
+
+    .credits {
+      margin-top: 20px;
+      font-size: 12px;
+      text-align: center;
+      color: #6272a4;
+      line-height: 1.5;
+    }
+
+    .credits a {
+      color: #bd93f9;
+      text-decoration: none;
+    }
+
+    .credits a:hover {
+      color: #ff79c6;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #282a36;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #6272a4;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #bd93f9;
+    }
+
+    /* Vampire Theme - Initially hidden */
+    body.vampire-theme {
+      background-color: #282a36;
+      color: #f8f8f2;
+    }
+
+    .vampire-theme button {
+      background-color: #ff5555;
+      color: #f8f8f2;
+      border: 1px solid #bd93f9;
+    }
+
+    .vampire-theme button:hover {
+      background-color: #bd93f9;
+      box-shadow: 0 0 10px rgba(189, 147, 249, 0.3);
+    }
+
+    .vampire-theme input[type="text"] {
+      background-color: #282a36;
+      border-color: #bd93f9;
+      color: #f8f8f2;
+    }
+
+    .vampire-theme input[type="text"]:focus {
+      box-shadow: 0 0 10px rgba(189, 147, 249, 0.3);
+    }
+
+    .vampire-theme #status.success {
+      background-color: #50fa7b;
+      color: #282a36;
+    }
+
+    .vampire-theme #status.error {
+      background-color: #ff5555;
+      color: #f8f8f2;
+    }
+
+    .vampire-theme .credits {
+      color: #bd93f9;
+    }
+
+    .vampire-theme .credits a {
+      color: #ff5555;
+    }
+
+    .vampire-theme .credits a:hover {
+      color: #50fa7b;
+    }
+
+    /* Blood drip animation */
+    @keyframes drip {
+      0% { transform: scaleY(0); opacity: 0; }
+      100% { transform: scaleY(1); opacity: 1; }
+    }
+
+    .vampire-theme::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ff5555, #bd93f9);
+      transform-origin: top;
+      animation: drip 0.5s ease-in-out;
+    }
+
+    /* Scroll bar for vampire theme */
+    .vampire-theme ::-webkit-scrollbar-thumb {
+      background: #ff5555;
+    }
+
+    .vampire-theme ::-webkit-scrollbar-thumb:hover {
+      background: #bd93f9;
+    }
+
+    /* Cursor AI Theme */
+    body.cursor-theme {
+      background-color: #171717;
+      color: #e4e4e4;
+    }
+
+    .cursor-theme .section {
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .cursor-theme button {
+      background-color: #2a2a2a;
+      color: #e4e4e4;
+      border: 1px solid #3a3a3a;
+    }
+
+    .cursor-theme button:hover {
+      background-color: #3a3a3a;
+      border-color: #0066ff;
+    }
+
+    .cursor-theme input[type="text"] {
+      background-color: #2a2a2a;
+      border-color: #3a3a3a;
+      color: #e4e4e4;
+    }
+
+    .cursor-theme input[type="text"]:focus {
+      border-color: #0066ff;
+      box-shadow: 0 0 0 1px #0066ff22;
+    }
+
+    .cursor-theme #status, 
+    .cursor-theme #result {
+      background-color: #2a2a2a;
+      border: 1px solid #3a3a3a;
+    }
+
+    .cursor-theme #result pre {
+      background-color: #1a1a1a;
+      border: 1px solid #2a2a2a;
+    }
+
+    .cursor-theme .success { 
+      background-color: #2a2a2a;
+      color: #4caf50;
+      border-left: 4px solid #4caf50;
+    }
+    
+    .cursor-theme .error { 
+      background-color: #2a2a2a;
+      color: #f44336;
+      border-left: 4px solid #f44336;
+    }
+    
+    .cursor-theme .warning { 
+      background-color: #2a2a2a;
+      color: #ff9800;
+      border-left: 4px solid #ff9800;
+    }
+    
+    .cursor-theme .info { 
+      background-color: #2a2a2a;
+      color: #0066ff;
+      border-left: 4px solid #0066ff;
+    }
+
+    .cursor-theme .credits {
+      color: #808080;
+    }
+
+    .cursor-theme .credits a {
+      color: #0066ff;
+    }
+
+    .cursor-theme .credits a:hover {
+      color: #3385ff;
+    }
+
+    .cursor-theme ::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+
+    .cursor-theme ::-webkit-scrollbar-thumb {
+      background: #3a3a3a;
+    }
+
+    .cursor-theme ::-webkit-scrollbar-thumb:hover {
+      background: #0066ff;
+    }
+
+    /* Theme Toggle Button - Now at bottom */
+    .theme-toggle {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+      z-index: 100;
+    }
+
+    /* Theme Menu */
+    .theme-menu {
+      position: fixed;
+      bottom: 48px;
+      right: 16px;
+      background-color: #44475a;
+      border-radius: 6px;
+      padding: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid #6272a4;
+    }
+
+    .theme-menu.show {
+      display: flex;
+    }
+
+    .theme-option {
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+      text-align: left;
+      width: auto;
+      margin: 0;
+    }
+
+    .theme-option:hover {
+      background-color: #6272a4;
+    }
+
+    /* Theme indicators */
+    .theme-option::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .theme-option[data-theme="dracula"]::before {
+      background-color: #bd93f9;
+    }
+
+    .theme-option[data-theme="cursor"]::before {
+      background-color: #0066ff;
+    }
+
+    .theme-option[data-theme="vampire"]::before {
+      background-color: #ff5555;
+    }
+
+    /* Adjust credits padding to not overlap with theme toggle */
+    .credits {
+      padding-bottom: 40px;
+    }
+
+    /* New tab icon styles */
+    .new-tab-icon {
+      display: inline-block;
+      margin-left: 6px;
+      opacity: 0.7;
+      vertical-align: middle;
+    }
+
+    /* Result actions styles */
+    .result-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .result-actions button {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    /* Update button styles to handle icons */
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeToggle" title="Theme options">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+    </svg>
+  </button>
+
+  <div class="theme-menu" id="themeMenu">
+    <button class="theme-option" data-theme="dracula">Dracula</button>
+    <button class="theme-option" data-theme="cursor">Cursor</button>
+    <button class="theme-option" data-theme="vampire">Vampire</button>
+  </div>
+
+  <div class="section">
+    <button id="convertBtn">Copy Page to Markdown</button>
+    <button id="copyOutlineBtn">Copy Page Outline</button>
+    <button id="outlineBtn">
+      Extract Outline from MD
+      <svg class="new-tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 19H5V5H12V3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V12H19V19ZM14 3V5H17.59L7.76 14.83L9.17 16.24L19 6.41V10H21V3H14Z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="url-input">
+      <input type="text" id="urlInput" placeholder="Enter URL to analyze">
+    </div>
+    <button id="analyzeUrlBtn">Analyze URL</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="result"></div>
+
+  <div class="credits">
+    Crafted with &#129499; by <a href="https://mtri.me/?ref=chrome-ext" target="_blank">Tri Vo</a><br>
+    Connect with me on <a href="https://linkedin.com/in/vominhtri" target="_blank">LinkedIn</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
