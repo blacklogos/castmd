@@ -51,7 +51,7 @@ This extension provides essential web content tools with an intelligent content 
 - Smart heading hierarchy management
 - Multiple theme support with persistent settings
 - Async/await pattern for better performance
-- Robust error handling and retry mechanisms
+- Error handling and retry mechanisms
 
 ## Features Deep Dive
 
@@ -71,7 +71,7 @@ This extension provides essential web content tools with an intelligent content 
 ### Theme System
 - Default Dracula theme for dark mode lovers
 - Cursor AI-inspired theme for a modern look
-- Hidden Vampire theme (click credits 5 times to unlock)
+- Vampire theme for fun.
 - Persistent theme preferences
 
 ## Development
@@ -90,9 +90,9 @@ v0.6.0 (Beta)
 Currently in beta. Targeting v1.0.0 release with:
 - Complete test coverage
 - Full documentation
-- Stable API
+- Stable API (I don't know about this part.)
 - Production-ready features
 
 ## Credits
 
-Crafted with ❤️ by [Tri Vo](https://mtri.me)
+Crafted with 🧛‍♀️ by [Tri Vo](https://mtri.me)
