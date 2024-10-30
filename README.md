@@ -55,6 +55,13 @@ This extension provides essential web content tools with an intelligent content 
 
 ## Features Deep Dive
 
+### File Naming System
+- Uses URL slug for more consistent file names
+- Fallbacks to hostname if slug is unavailable
+- Handles non-English URLs gracefully
+- Limits filename length to 35 characters
+- Removes common file extensions (.html, .php, etc.)
+
 ### Content Detection
 - Identifies main content areas using semantic HTML
 - Excludes navigation, footers, and sidebars
@@ -70,6 +77,21 @@ This extension provides essential web content tools with an intelligent content 
 ## Development
 
 Active project with regular updates. See JOURNAL.md for development progress and planned features.
+
+## Changelog
+v0.6.0 (Beta)
+- Improved file naming system using URL slugs
+- Better handling of international characters
+- Added debug logging with vampire emoji
+- Fixed filename length issues
+- Added fallback to hostname for numeric slugs
+
+## Development Status
+Currently in beta. Targeting v1.0.0 release with:
+- Complete test coverage
+- Full documentation
+- Stable API
+- Production-ready features
 
 ## Credits
 

@@ -38,7 +38,14 @@
 
 ## Version History
 
-### v1.5 (Current)
+### v0.6.0 (Current)
+- Fixed file name handling to use URL slug instead of title
+- Improved file name sanitization for non-English characters
+- Added better logging for debugging with vampire emoji
+- Limited filename length to 35 characters
+- Added fallback to hostname when slug is not available
+
+### v0.5.0
 - Added support for code blocks with syntax highlighting
 - Added support for markdown tables
 - Improved content detection for technical content
@@ -46,7 +53,7 @@
 - Added table alignment support
 - Fixed code block indentation issues
 
-### v1.4
+### v0.4.0
 - Added intelligent content detection
 - Implemented multiple theme options
 - Improved URL analysis
@@ -54,24 +61,24 @@
 - Fixed outline extraction issues
 - Added new tab indicator for outline tool
 
-### v1.3
+### v0.3.0
 - Added URL analysis feature
 - Implemented retry mechanism
 - Improved error handling
 - Added status messages
 
-### v1.2
+### v0.2.0
 - Added outline extraction tool
 - Improved clipboard integration
 - Fixed timing issues
 
-### v1.1
+### v0.1.1
 - Basic Markdown conversion
 - Popup interface
 - Content script implementation
 
-### v1.0
-- Initial release
+### v0.1.0
+- Initial alpha release
 - Basic HTML parsing
 - Simple conversion rules
 

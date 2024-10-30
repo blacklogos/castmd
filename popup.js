@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('copyOutlineBtn').addEventListener('click', handleCopyOutline);
   document.getElementById('outlineBtn').addEventListener('click', () => handleAction('outline'));
   document.getElementById('analyzeUrlBtn').addEventListener('click', handleAnalyzeUrl);
+  document.getElementById('saveToMdBtn').addEventListener('click', handleSaveToMd);
 
   // Easter egg theme switcher
   let clickCount = 0;
@@ -191,6 +192,48 @@ async function handleAnalyzeUrl() {
   } catch (error) {
     updateStatus('Failed to analyze URL. Please try again.', 'error');
     console.error('URL analysis error:', error);
+  }
+}
+
+async function handleSaveToMd() {
+  updateStatus('Processing...', 'info');
+  
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['content.js']
+    });
+
+    const response = await chrome.tabs.sendMessage(tab.id, { action: 'convert' });
+    
+    if (response && response.success) {
+      // Create filename from page title or URL
+      const pageTitle = await chrome.tabs.sendMessage(tab.id, { action: 'getPageTitle' });
+      let filename = pageTitle ? 
+        pageTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : 
+        new URL(tab.url).hostname;
+      filename = `${filename}.md`;
+
+      // Create blob and download
+      const blob = new Blob([response.markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      updateStatus('File saved successfully!', 'success');
+    } else {
+      throw new Error(response?.error || 'Unknown error');
+    }
+  } catch (error) {
+    console.error('Save error:', error);
+    updateStatus(`Error: ${error.message}. Please refresh and try again.`, 'error');
   }
 }
 

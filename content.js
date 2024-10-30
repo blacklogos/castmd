@@ -25,6 +25,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     return true;
   }
+
+  if (request.action === 'getPageTitle') {
+    try {
+      const title = findPageTitle();
+      sendResponse(title);
+    } catch (error) {
+      console.error('Get page title error:', error);
+      sendResponse(null);
+    }
+    return true;
+  }
 });
 
 function convertToMarkdown() {
@@ -363,4 +374,65 @@ function handleLists(element, isOrdered = false, level = 0) {
   });
 
   return markdown;
+}
+
+function sanitizeFileName(title) {
+    console.log('🧛‍♀️ Starting filename sanitization');
+    
+    try {
+        // Get current URL
+        const currentUrl = new URL(window.location.href);
+        console.log('🧛‍♀️ Current URL:', currentUrl.href);
+        
+        // Get the pathname and clean it
+        let slug = currentUrl.pathname
+            .split('/')                    // Split by slashes
+            .filter(Boolean)               // Remove empty segments
+            .pop() || '';                  // Get last segment or empty string
+            
+        console.log('🧛‍♀️ Raw slug from URL:', slug);
+        
+        // If slug is empty or just a number, fall back to the hostname
+        if (!slug || /^\d+$/.test(slug)) {
+            slug = currentUrl.hostname;
+        }
+        
+        // Clean the slug
+        slug = decodeURIComponent(slug)
+            .toLowerCase()
+            .replace(/\.html$|\.htm$|\.php$|\.aspx$/i, '')  // Remove common extensions
+            .replace(/[^a-z0-9]+/g, '-')                    // Replace non-alphanumeric with hyphen
+            .replace(/-{2,}/g, '-')                         // Replace multiple hyphens
+            .replace(/^-+|-+$/g, '');                       // Remove leading/trailing hyphens
+        
+        console.log('🧛‍♀️ Cleaned slug:', slug);
+        
+        // Limit to 35 characters
+        if (slug.length > 35) {
+            slug = slug.substring(0, 35).replace(/-+$/, '');
+            console.log('🧛‍♀️ Truncated slug:', slug);
+        }
+        
+        return slug;
+    } catch (error) {
+        console.error('🧛‍♀️ Error processing URL:', error);
+        // Fallback to a safe default
+        return 'page-content';
+    }
+}
+
+function downloadMarkdown(title, content) {
+    const fileName = sanitizeFileName(title) + '.md';
+    console.log('🧛‍♀️ Final filename:', fileName);
+    
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log('🧛‍♀️ Download initiated');
 }
