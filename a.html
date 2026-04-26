@@ -1,0 +1,102 @@
+<script>
+function copyCareerText() {
+  const text = `Phần hấp dẫn nhất đây: Tiền! Ở Đông Nam Á, lương khởi điểm cho tân binh là 800 USD/tháng, nhưng lên cấp C (C-level) thì "trên trời" – đủ để bạn mơ về một nông trại thật ngoài đời. Nhưng đừng vội mừng, vì để leo thang, bạn cần một vali kỹ năng:
+
+Tân binh (Entry Level): Biết cơ bản về thu hút người chơi, Excel/SQL (vâng, toán và số đấy), phân tích sáng tạo và dữ liệu cơ bản. Như nhân vật level 1 trong game, yếu nhưng đầy tiềm năng.
+
+Chiến binh (Mid Level): Sau 2 năm, nâng cấp lên thu hút người chơi chuyên sâu, học Python/R, thành thạo thử nghiệm A/B, làm chủ tối ưu cửa hàng ứng dụng (ASO), và quản lý đội. Như nhân vật level 30 với kỹ năng và đồ xịn hơn.
+
+Hiệp sĩ (Senior Level): 4+ năm, bạn phải giỏi lập kế hoạch chiến lược, phân tích nâng cao, định hướng sản phẩm, phát triển kinh doanh, và lãnh đạo đa chức năng. Như nhân vật level 60 với full kỹ năng và đồ hiếm.
+
+Thủ lĩnh (Director Level): Đây là cấp boss – nắm chiến lược công ty, phân tích thị trường, quản lý studio, lập kế hoạch đầu tư, và mở rộng quốc tế. Như nhân vật max level với đồ huyền thoại.`;
+  
+  try {
+    navigator.clipboard.writeText(text).then(function() {
+      const btn = document.querySelector('.mtri-copy-button');
+      const originalText = btn.textContent;
+      btn.textContent = 'Đã sao chép!';
+      btn.style.backgroundColor = '#dc3647';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#dc3647';
+      
+      setTimeout(function() {
+        btn.textContent = originalText;
+        btn.style.backgroundColor = 'transparent';
+        btn.style.color = '#dc3647';
+        btn.style.borderColor = '#e0e0e0';
+      }, 2000);
+    }).catch(function(err) {
+      console.error('Không thể sao chép:', err);
+    });
+  } catch (err) {
+    console.error('Error in copyCareerText:', err);
+  }
+}
+
+function saveProgress() {
+  try {
+    // Find the save button by its text content instead of onclick attribute
+    const btn = document.querySelector('button:not(.mtri-copy-button)');
+    if (!btn) {
+      console.error('Save button not found');
+      return;
+    }
+    
+    // Button press animation
+    btn.style.position = 'relative'; // Add this to make top property work
+    btn.style.top = '4px';
+    btn.style.boxShadow = '0 0 0 #9c2330, 0 1px 2px rgba(0,0,0,0.2)';
+    
+    // Show notification
+    setTimeout(function() {
+      // Reset button
+      btn.style.top = '0';
+      btn.style.boxShadow = '0 4px 0 #9c2330, 0 5px 5px rgba(0,0,0,0.15)';
+      
+      // Create notification
+      const notification = document.createElement('div');
+      notification.style.position = 'fixed';
+      notification.style.bottom = '20px';
+      notification.style.left = '50%';
+      notification.style.transform = 'translateX(-50%)';
+      notification.style.backgroundColor = '#4CAF50';
+      notification.style.color = 'white';
+      notification.style.padding = '10px 20px';
+      notification.style.borderRadius = '4px';
+      notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+      notification.style.zIndex = '1000';
+      notification.style.fontWeight = '500';
+      notification.textContent = '✅ Tiến trình đã được lưu!';
+      
+      document.body.appendChild(notification);
+      
+      // Remove notification after 3 seconds
+      setTimeout(function() {
+        document.body.removeChild(notification);
+      }, 3000);
+    }, 200);
+  } catch (err) {
+    console.error('Error in saveProgress:', err);
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    // Add event listeners directly to buttons
+    document.querySelectorAll('button').forEach(button => {
+      if (button.textContent.includes('🚀 Lưu tiến trình')) {
+        button.addEventListener('click', saveProgress);
+      }
+    });
+    
+    document.querySelectorAll('.mtri-copy-button').forEach(button => {
+      button.addEventListener('click', copyCareerText);
+    });
+
+    console.log('Event listeners attached successfully');
+  } catch (err) {
+    console.error('Error in initialization:', err);
+  }
+});
+</script> 
