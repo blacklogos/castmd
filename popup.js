@@ -1,275 +1,255 @@
-console.log('Popup script loaded');
+// Current output mode: 'md' or 'json'
+let currentMode = 'md';
+// Last converted content for preview/re-save
+let lastContent = null;
+let lastFilename = null;
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Setup event listeners
-  document.getElementById('convertBtn').addEventListener('click', handleConvert);
+// Model context limits (tokens) — used for fit display
+const MODEL_LIMITS = [
+  { name: 'gpt-4',   limit: 8_192 },
+  { name: 'gpt-4o',  limit: 128_000 },
+  { name: 'claude',  limit: 200_000 },
+  { name: 'gemini',  limit: 1_000_000 },
+];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('copyMdBtn').addEventListener('click', handleCopyMd);
+  document.getElementById('saveMdBtn').addEventListener('click', handleSaveMd);
   document.getElementById('copyOutlineBtn').addEventListener('click', handleCopyOutline);
-  document.getElementById('outlineBtn').addEventListener('click', () => handleAction('outline'));
-  document.getElementById('analyzeUrlBtn').addEventListener('click', handleAnalyzeUrl);
-  document.getElementById('saveToMdBtn').addEventListener('click', handleSaveToMd);
+  document.getElementById('copyAllTabsBtn').addEventListener('click', handleCopyAllTabs);
+  document.getElementById('closePreview').addEventListener('click', closePreview);
+  document.getElementById('recopyBtn').addEventListener('click', handleRecopy);
+  document.getElementById('resaveBtn').addEventListener('click', handleResave);
 
-  // Easter egg theme switcher
-  let clickCount = 0;
-  let lastClick = 0;
-  const credits = document.querySelector('.credits');
-
-  credits.addEventListener('click', (e) => {
-    const now = Date.now();
-    if (now - lastClick > 2000) { // Reset if more than 2 seconds between clicks
-      clickCount = 0;
-    }
-    
-    clickCount++;
-    lastClick = now;
-
-    if (clickCount === 5) {
-      toggleVampireTheme();
-      clickCount = 0;
-    }
-  });
-
-  // Theme menu handling
-  const themeToggle = document.getElementById('themeToggle');
-  const themeMenu = document.getElementById('themeMenu');
-  const themeOptions = document.querySelectorAll('.theme-option');
-
-  // Toggle theme menu
-  themeToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    themeMenu.classList.toggle('show');
-  });
-
-  // Close menu when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!themeMenu.contains(e.target) && !themeToggle.contains(e.target)) {
-      themeMenu.classList.remove('show');
-    }
-  });
-
-  // Theme selection
-  themeOptions.forEach(option => {
-    option.addEventListener('click', () => {
-      const theme = option.dataset.theme;
-      setTheme(theme);
-      themeMenu.classList.remove('show');
+  // Mode toggle — also updates button labels to reflect active output mode
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentMode = btn.dataset.mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+      updateButtonLabels();
     });
   });
 
-  // Check saved theme
-  chrome.storage.local.get(['theme'], (result) => {
-    setTheme(result.theme || 'dracula');
-  });
+  // Show tab count in badge
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  document.getElementById('tabCount').textContent = `${tabs.length} tabs`;
 });
 
-function toggleVampireTheme() {
-  const body = document.body;
-  const isVampire = body.classList.toggle('vampire-theme');
-  
-  // Save preference
-  chrome.storage.local.set({ vampireTheme: isVampire });
+// ── Action handlers ────────────────────────────────────────────────────────
 
-  // Show easter egg found message
-  updateStatus(
-    isVampire ? '🧛‍♂️ Vampire theme activated!' : '🌙 Regular theme restored',
-    'info'
-  );
+async function handleCopyMd() {
+  setStatus('Converting...', 'info');
+  try {
+    const { response, tab } = await injectAndConvert('convert');
+    const output = buildOutput(response.markdown, response.url, response.title);
+    await navigator.clipboard.writeText(output);
+    lastContent = output;
+    lastFilename = slugifyUrl(tab.url) + ({ json: '.json', xml: '.xml' }[currentMode] || '.md');
+    const tokens = estimateTokens(output);
+    setStatus('Copied', 'success', tokens);
+    showModelFit(tokens);
+    showPreview(output);
+  } catch (e) {
+    setStatus(e.message, 'error');
+  }
 }
 
-// Check for saved theme preference
-chrome.storage.local.get(['vampireTheme'], (result) => {
-  if (result.vampireTheme) {
-    document.body.classList.add('vampire-theme');
-  }
-});
-
-async function handleConvert() {
-  updateStatus('Processing...', 'info');
-  
+async function handleSaveMd() {
+  setStatus('Converting...', 'info');
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content.js']
-    });
-
-    const response = await chrome.tabs.sendMessage(tab.id, { action: 'convert' });
-    
-    if (response && response.success) {
-      await navigator.clipboard.writeText(response.markdown);
-      updateStatus('Markdown copied to clipboard!', 'success');
-    } else {
-      throw new Error(response?.error || 'Unknown error');
-    }
-  } catch (error) {
-    console.error('Conversion error:', error);
-    updateStatus(`Error: ${error.message}. Please refresh and try again.`, 'error');
+    const { response, tab } = await injectAndConvert('convert');
+    const output = buildOutput(response.markdown, response.url, response.title);
+    lastFilename = slugifyUrl(tab.url) + ({ json: '.json', xml: '.xml' }[currentMode] || '.md');
+    lastContent = output;
+    downloadText(lastFilename, output);
+    const tokens = estimateTokens(output);
+    setStatus('Saved', 'success', tokens);
+    showModelFit(tokens);
+    showPreview(output);
+  } catch (e) {
+    setStatus(e.message, 'error');
   }
 }
 
 async function handleCopyOutline() {
-  updateStatus('Extracting outline...', 'info');
-  
+  setStatus('Extracting...', 'info');
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content.js']
-    });
-
-    const response = await chrome.tabs.sendMessage(tab.id, { action: 'getOutline' });
-    
-    if (response && response.success) {
-      await navigator.clipboard.writeText(response.outline);
-      updateStatus('Outline copied to clipboard!', 'success');
-    } else {
-      throw new Error(response?.error || 'Unknown error');
-    }
-  } catch (error) {
-    console.error('Outline extraction error:', error);
-    updateStatus(`Error: ${error.message}. Please refresh and try again.`, 'error');
+    const { response } = await injectAndConvert('getOutline');
+    await navigator.clipboard.writeText(response.outline);
+    lastContent = response.outline;
+    setStatus('Copied', 'success');
+    showPreview(response.outline);
+  } catch (e) {
+    setStatus(e.message, 'error');
   }
 }
 
-async function handleAnalyzeUrl() {
-  const urlInput = document.getElementById('urlInput');
-  const url = urlInput.value.trim();
-  
-  if (!url) {
-    updateStatus('Please enter a URL', 'error');
-    return;
+async function handleCopyAllTabs() {
+  setStatus('Requesting permission...', 'info');
+
+  // Request optional host permission for non-active tab injection
+  const hasPermission = await new Promise(resolve =>
+    chrome.permissions.contains({ origins: ['<all_urls>'] }, resolve)
+  );
+
+  if (!hasPermission) {
+    const granted = await new Promise(resolve =>
+      chrome.permissions.request({ origins: ['<all_urls>'] }, resolve)
+    );
+    if (!granted) {
+      setStatus('Permission denied', 'error');
+      return;
+    }
   }
 
+  setStatus('Converting tabs...', 'info');
   try {
-    updateStatus('Analyzing URL...', 'info');
-    
-    const response = await chrome.runtime.sendMessage({
-      action: 'analyzeUrl',
-      url: url
-    });
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    const results = await Promise.allSettled(tabs.map(async tab => {
+      try {
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+        return await chrome.tabs.sendMessage(tab.id, { action: 'getPageMeta' });
+      } catch {
+        return null;
+      }
+    }));
 
-    if (response.error) {
-      updateStatus(response.error, 'error');
+    const successes = results
+      .filter(r => r.status === 'fulfilled' && r.value?.success)
+      .map(r => r.value);
+
+    if (successes.length === 0) {
+      setStatus('No tabs could be converted', 'error');
       return;
     }
 
-    // Store the response data for later use
-    window.analysisResult = response;
+    const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const combined = `# Research Session — ${date}\n\n` +
+      successes.map(({ title, url, markdown }) =>
+        `## [${title}](${url})\n\n${markdown}\n\n---\n\n`
+      ).join('');
 
-    // Display results with updated styling
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = `
-      <h3 style="margin-bottom: 12px;">Analysis Results:</h3>
-      <p style="margin-bottom: 8px;"><strong>Outline:</strong></p>
-      <pre style="margin-bottom: 16px; background-color: #282a36; padding: 12px; border-radius: 4px;">${response.outline || 'No headings found'}</pre>
-      <div class="result-actions">
-        <button id="copyFullMarkdownBtn" style="margin-bottom: 8px;">Copy Full Markdown</button>
-        <button id="copyUrlOutlineBtn" style="margin-bottom: 8px;">Copy Outline</button>
-      </div>
-    `;
-
-    // Add copy buttons functionality with separate IDs
-    document.getElementById('copyFullMarkdownBtn').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(window.analysisResult.markdown);
-        updateStatus('Full markdown copied to clipboard!', 'success');
-      } catch (err) {
-        updateStatus('Failed to copy markdown', 'error');
-      }
-    });
-
-    document.getElementById('copyUrlOutlineBtn').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(window.analysisResult.outline);
-        updateStatus('Outline copied to clipboard!', 'success');
-      } catch (err) {
-        updateStatus('Failed to copy outline', 'error');
-      }
-    });
-
-    updateStatus('URL analyzed successfully!', 'success');
-  } catch (error) {
-    updateStatus('Failed to analyze URL. Please try again.', 'error');
-    console.error('URL analysis error:', error);
+    await navigator.clipboard.writeText(combined);
+    lastContent = combined;
+    lastFilename = `session-${Date.now()}.md`;
+    const tokens = estimateTokens(combined);
+    setStatus(`Copied ${successes.length} tabs`, 'success', tokens);
+    showModelFit(tokens);
+    showPreview(combined);
+  } catch (e) {
+    setStatus(e.message, 'error');
   }
 }
 
-async function handleSaveToMd() {
-  updateStatus('Processing...', 'info');
-  
+async function handleRecopy() {
+  const text = document.getElementById('previewText').value;
+  await navigator.clipboard.writeText(text);
+  setStatus('Re-copied', 'success', estimateTokens(text));
+}
+
+async function handleResave() {
+  const text = document.getElementById('previewText').value;
+  downloadText(lastFilename || 'page.md', text);
+  setStatus('Re-saved', 'success');
+}
+
+// ── Core helpers ───────────────────────────────────────────────────────────
+
+async function injectAndConvert(action) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+  const response = await chrome.tabs.sendMessage(tab.id, { action });
+  if (!response?.success) throw new Error(response?.error || 'Conversion failed');
+  return { response, tab };
+}
+
+function buildOutput(markdown, url, title) {
+  if (currentMode === 'json') {
+    return JSON.stringify({
+      url: url || '', title: title || '', markdown,
+      tokens: estimateTokens(markdown), timestamp: new Date().toISOString()
+    }, null, 2);
+  }
+  if (currentMode === 'xml') {
+    return `<document>\n<source>${url || ''}</source>\n<document_content>\n${markdown}\n</document_content>\n</document>`;
+  }
+  return markdown;
+}
+
+function estimateTokens(text) {
+  return Math.ceil(text.length / 4);
+}
+
+function slugifyUrl(url) {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ['content.js']
-    });
-
-    const response = await chrome.tabs.sendMessage(tab.id, { action: 'convert' });
-    
-    if (response && response.success) {
-      // Create filename from page title or URL
-      const pageTitle = await chrome.tabs.sendMessage(tab.id, { action: 'getPageTitle' });
-      let filename = pageTitle ? 
-        pageTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : 
-        new URL(tab.url).hostname;
-      filename = `${filename}.md`;
-
-      // Create blob and download
-      const blob = new Blob([response.markdown], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      updateStatus('File saved successfully!', 'success');
-    } else {
-      throw new Error(response?.error || 'Unknown error');
-    }
-  } catch (error) {
-    console.error('Save error:', error);
-    updateStatus(`Error: ${error.message}. Please refresh and try again.`, 'error');
+    const { pathname, hostname } = new URL(url);
+    let slug = pathname.split('/').filter(Boolean).pop() || hostname;
+    return decodeURIComponent(slug)
+      .toLowerCase()
+      .replace(/\.[a-z]{2,4}$/i, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 35)
+      .replace(/-+$/, '') || hostname;
+  } catch {
+    return 'page';
   }
 }
 
-function handleAction(action) {
-  if (action === 'outline') {
-    chrome.tabs.create({ url: 'outline.html' });
-  }
+function downloadText(filename, content) {
+  const url = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
-function updateStatus(message, type) {
-  console.log(`Status update (${type}):`, message);
-  const statusElement = document.getElementById('status');
-  statusElement.textContent = message;
-  statusElement.className = type;
+function updateButtonLabels() {
+  const labels = {
+    md:   { copy: 'Copy as Markdown', save: 'Save as .md'   },
+    json: { copy: 'Copy as JSON',     save: 'Save as .json' },
+    xml:  { copy: 'Copy for Claude',  save: 'Save as .xml'  },
+  };
+  const l = labels[currentMode] || labels.md;
+  document.getElementById('copyMdLabel').textContent = l.copy;
+  document.getElementById('saveMdLabel').textContent = l.save;
 }
 
-function setTheme(theme) {
-  const body = document.body;
-  
-  // Remove all theme classes
-  body.classList.remove('dracula-theme', 'cursor-theme', 'vampire-theme');
-  
-  // Add selected theme class
-  switch (theme) {
-    case 'cursor':
-      body.classList.add('cursor-theme');
-      break;
-    case 'vampire':
-      body.classList.add('vampire-theme');
-      break;
-    default:
-      body.classList.add('dracula-theme');
-      theme = 'dracula';
-  }
+// ── UI helpers ─────────────────────────────────────────────────────────────
 
-  // Save theme preference
-  chrome.storage.local.set({ theme });
-  updateStatus(`${theme.charAt(0).toUpperCase() + theme.slice(1)} theme activated`, 'info');
+function setStatus(msg, type, tokens) {
+  const row = document.getElementById('statusRow');
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  const tokenEl = document.getElementById('tokenCount');
+
+  row.className = `status-row ${type}`;
+  dot.style.display = msg ? 'block' : 'none';
+  text.textContent = msg;
+  tokenEl.textContent = tokens ? `~${tokens.toLocaleString()} tokens` : '';
+}
+
+function showModelFit(tokens) {
+  const container = document.getElementById('modelFit');
+  container.innerHTML = '';
+
+  MODEL_LIMITS.forEach(({ name, limit }) => {
+    const chip = document.createElement('span');
+    chip.className = `model-chip ${tokens <= limit ? 'fits' : 'over'}`;
+    chip.textContent = name;
+    container.appendChild(chip);
+  });
+
+  container.classList.add('visible');
+}
+
+function showPreview(content) {
+  document.getElementById('previewText').value = content;
+  document.getElementById('previewPanel').classList.add('open');
+}
+
+function closePreview() {
+  document.getElementById('previewPanel').classList.remove('open');
+  document.getElementById('modelFit').classList.remove('visible');
 }

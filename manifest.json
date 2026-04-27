@@ -1,17 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "HTML to Markdown Converter",
-  "version": "1.3",
-  "description": "Converts HTML content to Markdown format, extracts outlines, and analyzes URLs",
+  "name": "md·convert",
+  "version": "2.0",
+  "description": "Convert any webpage to clean Markdown. Built for LLM workflows.",
   "permissions": [
     "activeTab",
     "scripting",
     "clipboardWrite",
-    "webRequest",
-    "tabs",
-    "storage"
+    "contextMenus",
+    "tabs"
   ],
-  "host_permissions": ["<all_urls>"],
+  "optional_host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -23,12 +22,14 @@
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"]
+  "commands": {
+    "copy-markdown": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+M"
+      },
+      "description": "Copy page as Markdown"
     }
-  ],
+  },
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
