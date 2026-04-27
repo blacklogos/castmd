@@ -1,4 +1,4 @@
-# cast.md
+# castmd
 
 **Cast any page. Feed any model.**
 

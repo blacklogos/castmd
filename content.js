@@ -1,6 +1,6 @@
 // Version-based guard — ensures new listeners register when content.js is updated.
 // Simple boolean guard would keep stale listeners across extension reloads.
-const CONTENT_VERSION = '3.0';
+const CONTENT_VERSION = '1.0';
 if (window.__castmdVersion !== CONTENT_VERSION) {
   window.__castmdVersion = CONTENT_VERSION;
 

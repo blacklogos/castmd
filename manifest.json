@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "cast.md",
-  "version": "3.0",
+  "name": "castmd",
+  "version": "1.0",
   "description": "Cast any page. Feed any model. Converts webpages to clean Markdown for LLM workflows.",
   "permissions": [
     "activeTab",
