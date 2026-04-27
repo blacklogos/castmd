@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>castmd — Cast any page. Feed any model.</title>
+  <meta name="description" content="Chrome extension that converts any webpage to clean Markdown for LLM workflows. One click → clipboard-ready MD, JSON, or Claude XML. Token-aware. Free and open source.">
+  <meta name="keywords" content="webpage to markdown, chrome extension, markdown converter, LLM workflow, Claude XML, token counter, copy page as markdown, castmd">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="castmd — Cast any page. Feed any model.">
+  <meta property="og:description" content="Chrome extension that converts any webpage to clean Markdown for LLM workflows. One click → clipboard-ready MD, JSON, or Claude XML.">
+  <meta property="og:url" content="https://castmd.cc4.marketing/">
+  <meta property="og:site_name" content="castmd">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="castmd — Cast any page. Feed any model.">
+  <meta name="twitter:description" content="Chrome extension for LLM workflows. Copy any page as MD, JSON, or Claude XML. Token-aware. Free and open source.">
+
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="cc4.marketing">
+  <meta name="theme-color" content="#7c6af7">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "castmd",
+    "applicationCategory": "BrowserApplication",
+    "operatingSystem": "Chrome",
+    "url": "https://github.com/blacklogos/md-convert",
+    "description": "Chrome extension that converts webpages to clean Markdown for LLM workflows. One click → clipboard-ready MD, JSON, or Claude XML. Token-aware.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "cc4.marketing", "url": "https://cc4.marketing" },
+    "softwareVersion": "1.0.0",
+    "featureList": [
+      "Webpage to Markdown conversion",
+      "MD, JSON, and Claude XML output modes",
+      "Token count estimation",
+      "Model fit display — gpt-4, gpt-4o, claude, gemini",
+      "All-tabs export",
+      "Preview and edit panel",
+      "Right-click context menu",
+      "Keyboard shortcut Ctrl+Shift+M"
+    ],
+    "codeRepository": "https://github.com/blacklogos/md-convert"
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f4f0e8;
+      --accent: #7c6af7;
+      --accent-light: #ede4ff;
+      --accent-mid: #ddd0ff;
+      --text: #141414;
+      --text-muted: #3a3a3a;
+      --white: #ffffff;
+      --card-bg: #f0edff;
+      --code-bg: #141414;
+      --radius: 16px;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-serif: 'Fraunces', serif;
+    }
+
+    body {
+      font-family: var(--font-mono);
+      color: var(--text);
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 15% 0%, #e8e2ff 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 20%, #ddd4f8 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 100%, #e8e4dc 0%, transparent 50%);
+      min-height: 100vh;
+      line-height: 1.7;
+      font-size: 15px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(20,20,20,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20,20,20,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Header ── */
+    header { padding: 20px 0; }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--white);
+      border: 1px solid rgba(20,20,20,0.08);
+      border-radius: 999px;
+      padding: 10px 20px 10px 16px;
+      box-shadow: 0 2px 12px rgba(20,20,20,0.06);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    .logo {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: conic-gradient(from 180deg, #ede4ff, #ddd0ff, #d6e4ff, #ede4ff);
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+
+    .header-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.2s;
+    }
+
+    .header-link:hover { color: var(--text); }
+
+    .gh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--text);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .gh-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(20,20,20,0.2);
+    }
+
+    .gh-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 0 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-text h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(36px, 5vw, 58px);
+      line-height: 1.1;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .hero-text h1 span { color: var(--accent); }
+
+    .hero-text .tagline {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      max-width: 440px;
+    }
+
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(124,106,247,0.35);
+    }
+
+    .btn-dark {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--text);
+      color: var(--white);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-dark:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(20,20,20,0.2);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--white);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      border: 1px solid rgba(20,20,20,0.12);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(20,20,20,0.08);
+    }
+
+    .hero-visual { position: relative; }
+
+    .hero-visual .screenshot {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid rgba(20,20,20,0.08);
+      box-shadow: 0 24px 60px rgba(20,20,20,0.15);
+      background: var(--white);
+    }
+
+    .screenshot-glow {
+      position: absolute;
+      inset: -20px;
+      background: radial-gradient(ellipse at center, rgba(124,106,247,0.15) 0%, transparent 70%);
+      z-index: -1;
+      border-radius: 30px;
+    }
+
+    /* ── Install Card ── */
+    .install-section { padding: 40px 0 60px; }
+
+    .install-card {
+      background: var(--card-bg);
+      border: 2px dashed rgba(124,106,247,0.3);
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 680px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .install-card .label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .install-steps {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .install-step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .install-step:not(:last-child)::after {
+      content: '→';
+      position: absolute;
+      right: -8px;
+      top: 8px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .install-step:first-child { padding-left: 0; }
+    .install-step:last-child { padding-right: 0; }
+
+    .install-step-num {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .install-step h4 {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .install-step p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .install-code {
+      position: relative;
+      background: var(--code-bg);
+      border-radius: 10px;
+      padding: 14px 60px 14px 20px;
+      text-align: left;
+      margin-top: 12px;
+    }
+
+    .install-code code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #e0dcd4;
+    }
+
+    .install-code code .prompt { color: var(--accent); }
+
+    .copy-btn {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #e0dcd4;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.18);
+      transform: translateY(-50%) scale(1.04);
+    }
+
+    .copy-btn.copied { background: #2d6a4f; color: var(--white); }
+
+    /* ── Features ── */
+    .features { padding: 60px 0 80px; }
+
+    .section-heading {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-heading h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .section-heading p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--white);
+      border: 1px solid rgba(20,20,20,0.06);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(20,20,20,0.08);
+    }
+
+    .feature-num {
+      font-family: var(--font-serif);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── How It Works ── */
+    .how-it-works { padding: 60px 0 80px; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .step { text-align: center; position: relative; }
+
+    .step-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--text);
+      color: var(--white);
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 24px;
+      right: -10px;
+      width: 20px;
+      height: 2px;
+      background: rgba(20,20,20,0.15);
+    }
+
+    /* ── Modes showcase ── */
+    .modes { padding: 40px 0 80px; }
+
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .mode-card {
+      background: var(--white);
+      border: 1px solid rgba(20,20,20,0.06);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .mode-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(20,20,20,0.08);
+    }
+
+    .mode-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(20,20,20,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mode-tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--white);
+      background: var(--accent);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .mode-tag.json { background: #0891b2; }
+    .mode-tag.xml  { background: #d97706; }
+
+    .mode-use {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .mode-code-block {
+      background: var(--code-bg);
+      padding: 16px 20px;
+      margin: 0;
+    }
+
+    .mode-code-block pre {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #c9c0b4;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .mode-code-block pre .kw  { color: #a78bfa; }
+    .mode-code-block pre .str { color: #86efac; }
+    .mode-code-block pre .tag { color: #fbbf24; }
+    .mode-code-block pre .cmt { color: #6b7280; }
+
+    .mode-card-footer {
+      padding: 12px 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Tech Stack ── */
+    .tech { padding: 40px 0 80px; }
+
+    .tech-inner {
+      background: var(--white);
+      border: 1px solid rgba(20,20,20,0.06);
+      border-radius: var(--radius);
+      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .tech-item { text-align: center; }
+
+    .tech-item .tech-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .tech-item .tech-name {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* ── FAQ ── */
+    .faq { padding: 60px 0 80px; }
+
+    .faq-list {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid rgba(20,20,20,0.08);
+      padding: 20px 0;
+    }
+
+    .faq-item summary {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .faq-item summary::-webkit-details-marker { display: none; }
+
+    .faq-item summary::after {
+      content: '+';
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .faq-item[open] summary::after { transform: rotate(45deg); }
+
+    .faq-item p, .faq-item li {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 640px;
+    }
+
+    .faq-item code {
+      font-family: var(--font-mono);
+      background: rgba(124,106,247,0.08);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid rgba(20,20,20,0.08);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-inner span {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .footer-inner a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-inner a:hover { color: var(--accent); }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 12px;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 50px 0 40px;
+        gap: 40px;
+      }
+
+      .hero-text { text-align: center; }
+      .hero-text .tagline { margin-left: auto; margin-right: auto; }
+      .hero-ctas { justify-content: center; }
+      .features-grid { grid-template-columns: 1fr; }
+      .modes-grid { grid-template-columns: 1fr; }
+
+      .steps {
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+
+      .step:not(:last-child)::after { display: none; }
+      .header-link { display: none; }
+      .install-steps { flex-direction: column; gap: 16px; }
+      .install-step:not(:last-child)::after { display: none; }
+      .install-step { padding: 0; }
+
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="container">
+    <header>
+      <div class="header-inner">
+        <div class="header-left">
+          <a href="/" class="logo">castmd</a>
+          <span class="badge">Chrome Extension · v1.0</span>
+        </div>
+        <div class="header-right">
+          <a href="#features" class="header-link">Features</a>
+          <a href="#modes" class="header-link">Modes</a>
+          <a href="#how" class="header-link">How it works</a>
+          <a href="https://github.com/blacklogos/md-convert" class="gh-btn" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <!-- Hero -->
+  <div class="container">
+    <section class="hero">
+      <div class="hero-text">
+        <h1>Cast any page.<br><span>Feed any model.</span></h1>
+        <p class="tagline">Chrome extension that converts webpages to clean Markdown in one click. MD, JSON, or Claude XML. Token-aware. Built for LLM workflows.</p>
+        <div class="hero-ctas">
+          <a href="https://github.com/blacklogos/md-convert/releases/latest" class="btn-primary" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Install Extension
+          </a>
+          <a href="https://github.com/blacklogos/md-convert" class="btn-dark" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View Source
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="screenshot-glow"></div>
+        <!-- Extension popup mockup -->
+        <svg class="screenshot" viewBox="0 0 320 420" xmlns="http://www.w3.org/2000/svg">
+          <!-- Popup shell -->
+          <rect width="320" height="420" fill="#ffffff" rx="12"/>
+
+          <!-- Chrome top bar -->
+          <rect width="320" height="36" fill="#f3f4f6" rx="12"/>
+          <rect x="0" y="22" width="320" height="14" fill="#f3f4f6"/>
+          <circle cx="16" cy="18" r="5" fill="#ef4444" opacity="0.7"/>
+          <circle cx="32" cy="18" r="5" fill="#f59e0b" opacity="0.7"/>
+          <circle cx="48" cy="18" r="5" fill="#22c55e" opacity="0.7"/>
+          <rect x="68" y="9" width="220" height="18" rx="9" fill="white" opacity="0.8"/>
+          <text x="178" y="22" font-family="monospace" font-size="9" fill="#9ca3af" text-anchor="middle">github.com/blacklogos/castmd</text>
+
+          <!-- Popup content area -->
+          <rect x="10" y="44" width="300" height="362" fill="#ffffff" rx="8"/>
+
+          <!-- Header row -->
+          <text x="24" y="72" font-family="Georgia, serif" font-size="14" font-weight="700" fill="#111827">cast</text>
+          <text x="55" y="72" font-family="Georgia, serif" font-size="14" font-weight="600" fill="#7c6af7">md</text>
+
+          <!-- Mode toggle -->
+          <rect x="180" y="56" width="116" height="24" rx="6" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="1"/>
+          <!-- MD active -->
+          <rect x="182" y="58" width="34" height="20" rx="4" fill="white" opacity="0.9"/>
+          <rect x="182" y="58" width="34" height="20" rx="4" fill="none" stroke="#e5e7eb" stroke-width="0.5"/>
+          <text x="199" y="72" font-family="monospace" font-size="9" font-weight="600" fill="#374151" text-anchor="middle">MD</text>
+          <text x="222" y="72" font-family="monospace" font-size="9" font-weight="500" fill="#9ca3af" text-anchor="middle">JSON</text>
+          <text x="249" y="72" font-family="monospace" font-size="9" font-weight="500" fill="#9ca3af" text-anchor="middle">XML</text>
+
+          <!-- Divider -->
+          <line x1="24" y1="84" x2="296" y2="84" stroke="#f3f4f6" stroke-width="1"/>
+
+          <!-- Button 1: Copy as Markdown -->
+          <rect x="20" y="92" width="280" height="34" rx="8" fill="#fafafa" stroke="#e8e8e8" stroke-width="1"/>
+          <!-- Copy icon -->
+          <rect x="32" y="101" width="11" height="11" rx="2" fill="none" stroke="#d1d5db" stroke-width="1.5"/>
+          <rect x="28" y="104" width="11" height="11" rx="2" fill="none" stroke="#d1d5db" stroke-width="1.5" opacity="0.6"/>
+          <text x="50" y="113" font-family="monospace" font-size="10" fill="#374151">Copy as Markdown</text>
+
+          <!-- Button 2: Save as .md -->
+          <rect x="20" y="131" width="280" height="34" rx="8" fill="#fafafa" stroke="#e8e8e8" stroke-width="1"/>
+          <path d="M32 136 L32 152 L44 152 L44 146 L40 142 L40 136 Z" fill="none" stroke="#d1d5db" stroke-width="1.5" stroke-linejoin="round"/>
+          <polyline points="38,140 38,148 34,148" fill="none" stroke="#d1d5db" stroke-width="1.5" opacity="0" />
+          <!-- download arrow -->
+          <polyline points="38,141 38,148" stroke="#d1d5db" stroke-width="1.5"/>
+          <polyline points="35,145 38,148 41,145" fill="none" stroke="#d1d5db" stroke-width="1.5"/>
+          <text x="50" y="152" font-family="monospace" font-size="10" fill="#374151">Save as .md</text>
+
+          <!-- Button 3: Copy Outline -->
+          <rect x="20" y="170" width="280" height="34" rx="8" fill="#fafafa" stroke="#e8e8e8" stroke-width="1"/>
+          <line x1="30" y1="183" x2="44" y2="183" stroke="#d1d5db" stroke-width="1.5"/>
+          <line x1="30" y1="188" x2="44" y2="188" stroke="#d1d5db" stroke-width="1.5"/>
+          <line x1="30" y1="193" x2="44" y2="193" stroke="#d1d5db" stroke-width="1.5"/>
+          <text x="50" y="191" font-family="monospace" font-size="10" fill="#374151">Copy Outline</text>
+
+          <!-- Button 4: Copy all tabs — highlighted -->
+          <rect x="20" y="209" width="280" height="34" rx="8" fill="white" stroke="#a78bfa" stroke-width="1"/>
+          <rect x="20" y="209" width="280" height="34" rx="8" fill="none" stroke="#a78bfa" stroke-width="1"/>
+          <!-- glow -->
+          <rect x="20" y="209" width="280" height="34" rx="8" fill="rgba(124,106,247,0.04)"/>
+          <rect x="30" y="216" width="7" height="7" fill="none" stroke="#7c6af7" stroke-width="1.5"/>
+          <rect x="38" y="216" width="7" height="7" fill="none" stroke="#7c6af7" stroke-width="1.5"/>
+          <rect x="38" y="224" width="7" height="7" fill="none" stroke="#7c6af7" stroke-width="1.5"/>
+          <rect x="30" y="224" width="7" height="7" fill="none" stroke="#7c6af7" stroke-width="1.5"/>
+          <text x="52" y="230" font-family="monospace" font-size="10" fill="#374151">Copy all tabs</text>
+          <!-- Tab badge -->
+          <rect x="248" y="217" width="38" height="16" rx="8" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="1"/>
+          <text x="267" y="229" font-family="monospace" font-size="9" fill="#9ca3af" text-anchor="middle">12 tabs</text>
+
+          <!-- Status row -->
+          <circle cx="28" cy="264" r="3" fill="#059669"/>
+          <text x="36" y="268" font-family="monospace" font-size="9" fill="#059669">Copied to clipboard</text>
+          <text x="252" y="268" font-family="monospace" font-size="9" fill="#9ca3af" text-anchor="end">~2.4k tokens</text>
+
+          <!-- Model fit chips -->
+          <rect x="20" y="278" width="42" height="16" rx="4" fill="#f0fdf4" stroke="#a7f3d0" stroke-width="1"/>
+          <text x="41" y="290" font-family="monospace" font-size="8" fill="#059669" text-anchor="middle">gpt-4o</text>
+
+          <rect x="66" y="278" width="44" height="16" rx="4" fill="#f0fdf4" stroke="#a7f3d0" stroke-width="1"/>
+          <text x="88" y="290" font-family="monospace" font-size="8" fill="#059669" text-anchor="middle">claude</text>
+
+          <rect x="114" y="278" width="46" height="16" rx="4" fill="#f0fdf4" stroke="#a7f3d0" stroke-width="1"/>
+          <text x="137" y="290" font-family="monospace" font-size="8" fill="#059669" text-anchor="middle">gemini</text>
+
+          <rect x="164" y="278" width="40" height="16" rx="4" fill="#fafafa" stroke="#e5e7eb" stroke-width="1"/>
+          <text x="184" y="290" font-family="monospace" font-size="8" fill="#9ca3af" text-anchor="middle" text-decoration="line-through">gpt-4</text>
+
+          <!-- Divider -->
+          <line x1="20" y1="306" x2="300" y2="306" stroke="#f3f4f6" stroke-width="1"/>
+
+          <!-- Footer -->
+          <text x="24" y="322" font-family="monospace" font-size="8" fill="#d1d5db">⌃⇧M · right-click</text>
+          <text x="296" y="322" font-family="monospace" font-size="8" fill="#9ca3af" text-anchor="end">cc4.marketing</text>
+
+          <!-- Preview panel (open) -->
+          <rect x="20" y="332" width="280" height="64" rx="6" fill="#fafafa" stroke="#e5e7eb" stroke-width="1"/>
+          <text x="28" y="346" font-family="monospace" font-size="8" font-weight="600" fill="#9ca3af" letter-spacing="0.8">PREVIEW &amp; EDIT</text>
+          <text x="28" y="362" font-family="monospace" font-size="9" fill="#6b7280"># Getting Started with castmd</text>
+          <text x="28" y="374" font-family="monospace" font-size="9" fill="#9ca3af">**castmd** converts any webpage to clean</text>
+          <text x="28" y="386" font-family="monospace" font-size="9" fill="#9ca3af">Markdown. One click, clipboard ready.</text>
+        </svg>
+      </div>
+    </section>
+  </div>
+
+  <!-- Install -->
+  <div class="container">
+    <section class="install-section" id="install">
+      <div class="install-card">
+        <p class="label">Install in 3 steps</p>
+        <div class="install-steps">
+          <div class="install-step">
+            <span class="install-step-num">01</span>
+            <h4>Download</h4>
+            <p>Get the ZIP from GitHub releases and unzip it</p>
+          </div>
+          <div class="install-step">
+            <span class="install-step-num">02</span>
+            <h4>Load</h4>
+            <p>Open <code>chrome://extensions/</code> → Developer mode → Load unpacked</p>
+          </div>
+          <div class="install-step">
+            <span class="install-step-num">03</span>
+            <h4>Cast</h4>
+            <p>Visit any page → click castmd → choose output → paste into your model</p>
+          </div>
+        </div>
+        <div class="install-code" id="installCmd">
+          <code><span class="prompt">→</span> chrome://extensions/ <span style="color:#6b7280">→ Enable Developer mode → Load unpacked</span></code>
+          <button class="copy-btn" onclick="copyInstall(this)">Copy</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Features -->
+  <div class="container">
+    <section class="features" id="features">
+      <div class="section-heading">
+        <h2>Everything your LLM workflow needs.</h2>
+        <p>From a single article to your entire research session — castmd handles it.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-num">01</div>
+          <h3>Inline Formatting</h3>
+          <p>Bold, italic, links, and inline code survive the conversion. Markdown that reads like the original page.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-num">02</div>
+          <h3>Token Counter</h3>
+          <p>Exact token estimates after every conversion. Know before you paste whether the content fits your context window.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-num">03</div>
+          <h3>Model Fit Display</h3>
+          <p>Instant fit check against gpt-4, gpt-4o, Claude, and Gemini. Green chips for fits, greyed-out for over limit.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-num">04</div>
+          <h3>All-Tabs Export</h3>
+          <p>Merge every open tab into one Markdown session document. Capture your entire research context in a single paste.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-num">05</div>
+          <h3>Smart Detection</h3>
+          <p>ARIA-role content detection skips nav, sidebars, and footers automatically. Full GitHub README support included.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-num">06</div>
+          <h3>Preview &amp; Edit</h3>
+          <p>Review and tweak converted output before copying or saving. Edit inline, then re-copy or re-save in one click.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Output Modes -->
+  <div class="container">
+    <section class="modes" id="modes">
+      <div class="section-heading">
+        <h2>Three modes, one click.</h2>
+        <p>Pick the output format that your model or workflow expects.</p>
+      </div>
+      <div class="modes-grid">
+        <div class="mode-card">
+          <div class="mode-card-header">
+            <span class="mode-tag">MD</span>
+            <span class="mode-use">Universal · Obsidian · Notion</span>
+          </div>
+          <div class="mode-code-block">
+            <pre><span class="kw"># </span>Getting Started with castmd
+
+<span class="kw">**</span>castmd<span class="kw">**</span> converts any webpage to clean
+Markdown for LLM workflows.
+
+<span class="kw">## </span>Features
+
+<span class="kw">-</span> Token counting
+<span class="kw">-</span> Model fit display
+<span class="kw">-</span> All-tabs export</pre>
+          </div>
+          <div class="mode-card-footer">Clean Markdown. Paste anywhere.</div>
+        </div>
+        <div class="mode-card">
+          <div class="mode-card-header">
+            <span class="mode-tag json">JSON</span>
+            <span class="mode-use">APIs · RAG pipelines · Code</span>
+          </div>
+          <div class="mode-code-block">
+            <pre><span class="kw">{</span>
+  <span class="str">"title"</span><span class="kw">:</span> <span class="str">"Getting Started"</span>,
+  <span class="str">"url"</span><span class="kw">:</span> <span class="str">"github.com/..."</span>,
+  <span class="str">"markdown"</span><span class="kw">:</span> <span class="str">"# Getting..."</span>,
+  <span class="str">"tokens"</span><span class="kw">:</span> 2418
+<span class="kw">}</span></pre>
+          </div>
+          <div class="mode-card-footer">Structured data for pipelines.</div>
+        </div>
+        <div class="mode-card">
+          <div class="mode-card-header">
+            <span class="mode-tag xml">XML</span>
+            <span class="mode-use">Claude · Anthropic API</span>
+          </div>
+          <div class="mode-code-block">
+            <pre><span class="tag">&lt;document&gt;</span>
+<span class="tag">&lt;source&gt;</span>github.com/...<span class="tag">&lt;/source&gt;</span>
+<span class="tag">&lt;document_content&gt;</span>
+<span class="kw"># </span>Getting Started
+
+<span class="kw">**</span>castmd<span class="kw">**</span> converts any webpage...
+<span class="tag">&lt;/document_content&gt;</span>
+<span class="tag">&lt;/document&gt;</span></pre>
+          </div>
+          <div class="mode-card-footer">Claude <code>&lt;document&gt;</code> wrapper format.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- How It Works -->
+  <div class="container">
+    <section class="how-it-works" id="how">
+      <div class="section-heading">
+        <h2>How it works.</h2>
+        <p>From any webpage to your model in four clicks.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Install</h3>
+          <p>Load the extension in Chrome developer mode — no Chrome Web Store required.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Browse</h3>
+          <p>Navigate to any page — docs, articles, GitHub READMEs, research papers.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Cast</h3>
+          <p>Click the popup, choose MD, JSON, or XML, then copy or save.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Paste</h3>
+          <p>Drop it into your model. Token count tells you exactly what fits.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tech -->
+  <div class="container">
+    <section class="tech">
+      <div class="tech-inner">
+        <div class="tech-item">
+          <div class="tech-label">Platform</div>
+          <div class="tech-name">Chrome MV3</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">Language</div>
+          <div class="tech-name">Vanilla JS</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">Dependencies</div>
+          <div class="tech-name">Zero</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">Backend</div>
+          <div class="tech-name">None</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-label">License</div>
+          <div class="tech-name">Open Source</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FAQ -->
+  <div class="container">
+    <section class="faq">
+      <div class="section-heading">
+        <h2>Questions.</h2>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Does it work on all websites?</summary>
+          <p>castmd uses semantic HTML detection — <code>main</code>, <code>article</code>, <code>[role="main"]</code>, and content-density analysis as a fallback. It works on most content sites, documentation, and GitHub READMEs. Dynamic SPAs may need a moment to fully load before casting.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What is the XML format for?</summary>
+          <p>The XML mode wraps content in Anthropic's <code>&lt;document&gt;</code> format — the same structure used in Claude's multi-document prompting API. Paste it directly into a Claude conversation or system prompt for structured context injection.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does castmd send my data anywhere?</summary>
+          <p>No. castmd runs entirely in your browser. No server, no analytics, no tracking. Conversion happens in the content script injected into the active tab. Nothing leaves your machine.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How does all-tabs export work?</summary>
+          <p>castmd injects a content script into each open tab, converts the page content to Markdown, then concatenates all pages into a single document separated by horizontal rules and page titles. The token count reflects the full combined document.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How are tokens counted?</summary>
+          <p>castmd estimates tokens as <code>ceil(characters / 4)</code> — a good approximation for English-language LLM tokenizers. It then compares against known context limits: gpt-4 (8k), gpt-4o (128k), Claude (200k), Gemini (1M).</p>
+        </details>
+        <details class="faq-item">
+          <summary>What keyboard shortcut does castmd use?</summary>
+          <p><code>Ctrl+Shift+M</code> on Windows/Linux, <code>Cmd+Shift+M</code> on Mac. You can also right-click any page and choose "Copy page as Markdown" from the context menu.</p>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <div class="container">
+    <footer>
+      <div class="footer-inner">
+        <span>castmd v1.0.0 · Cast any page. Feed any model.</span>
+        <div class="footer-links">
+          <a href="https://github.com/blacklogos/md-convert" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/blacklogos/md-convert/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="https://cc4.marketing" target="_blank" rel="noopener">cc4.marketing</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Copy install command
+    function copyInstall(btn) {
+      navigator.clipboard.writeText('chrome://extensions/').then(() => {
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>
