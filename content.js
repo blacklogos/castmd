@@ -1,8 +1,8 @@
 // Version-based guard — ensures new listeners register when content.js is updated.
 // Simple boolean guard would keep stale listeners across extension reloads.
-const CONTENT_VERSION = '2.6';
-if (window.__mdConvertVersion !== CONTENT_VERSION) {
-  window.__mdConvertVersion = CONTENT_VERSION;
+const CONTENT_VERSION = '3.0';
+if (window.__castmdVersion !== CONTENT_VERSION) {
+  window.__castmdVersion = CONTENT_VERSION;
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     try {

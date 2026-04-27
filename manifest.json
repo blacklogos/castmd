@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "md·convert",
-  "version": "2.0",
-  "description": "Convert any webpage to clean Markdown. Built for LLM workflows.",
+  "name": "cast.md",
+  "version": "3.0",
+  "description": "Cast any page. Feed any model. Converts webpages to clean Markdown for LLM workflows.",
   "permissions": [
     "activeTab",
     "scripting",
