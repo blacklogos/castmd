@@ -1,6 +1,6 @@
 // Version-based guard — ensures new listeners register when content.js is updated.
 // Simple boolean guard would keep stale listeners across extension reloads.
-const CONTENT_VERSION = '1.0';
+const CONTENT_VERSION = '1.1.0';
 if (window.__castmdVersion !== CONTENT_VERSION) {
   window.__castmdVersion = CONTENT_VERSION;
 
@@ -207,9 +207,10 @@ function findPageTitle() {
 function findMainContent() {
   const selectors = [
     '#readme article', '.markdown-body', '#readme',
+    '[itemprop="articleBody"]',                    // schema.org — every.to, news sites
     'main', 'article', '[role="main"]',
-    '#main-content', '.main-content', '.post-content',
-    '.article-content', '.entry-content', '.content',
+    '#main-content', '.main-content', '.post-content', '.post-body',
+    '.article-content', '.article-body', '.entry-content', '.content',
     '#content', '.page-content', '.site-content', '.body-content',
     '[data-content]', '.container > section', 'section.content'
   ];
@@ -228,18 +229,19 @@ function isValidContentContainer(el) {
 }
 
 function findContentByDensity() {
+  // Score by paragraph text per element — favours the article wrapper over
+  // individual paragraph divs (which have high density but only one <p>).
   let best = document.body;
-  let max = getContentDensity(document.body);
+  let max = -1;
   document.body.querySelectorAll('div,section,article').forEach(el => {
-    const d = getContentDensity(el);
-    if (d > max) { max = d; best = el; }
+    const paras = el.querySelectorAll('p');
+    if (paras.length < 2) return;
+    const paraText = Array.from(paras).reduce((s, p) => s + p.textContent.trim().length, 0);
+    if (paraText < 200) return;
+    const score = paraText / (el.getElementsByTagName('*').length || 1);
+    if (score > max) { max = score; best = el; }
   });
   return best;
-}
-
-function getContentDensity(el) {
-  const linkLen = Array.from(el.getElementsByTagName('a')).reduce((s, a) => s + a.textContent.length, 0);
-  return (el.textContent.length - linkLen) / (el.getElementsByTagName('*').length || 1);
 }
 
 function shouldSkipElement(el) {

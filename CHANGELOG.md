@@ -1,3 +1,12 @@
+## v1.1.0 — 2026-04-29
+
+### New features
+- Save all tabs as files — bulk-export every open tab in current window as separate `.md` / `.json` / `.xml` files (filename collisions deduped with `-2`, `-3` suffixes)
+
+### Bug fixes
+- Article extraction on every.to and other SPA-rendered editorial sites — added `[itemprop="articleBody"]` (schema.org), `.post-body`, `.article-body` selectors
+- Density-fallback content detection no longer picks individual paragraph wrappers — now scores by paragraph text per element, requires ≥2 `<p>` tags
+
 ## v1.0.0 — 2026-04-27
 
 ### New features

@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('saveMdBtn').addEventListener('click', handleSaveMd);
   document.getElementById('copyOutlineBtn').addEventListener('click', handleCopyOutline);
   document.getElementById('copyAllTabsBtn').addEventListener('click', handleCopyAllTabs);
+  document.getElementById('saveAllTabsBtn').addEventListener('click', handleSaveAllTabs);
   document.getElementById('closePreview').addEventListener('click', closePreview);
   document.getElementById('recopyBtn').addEventListener('click', handleRecopy);
   document.getElementById('resaveBtn').addEventListener('click', handleResave);
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Show tab count in badge
   const tabs = await chrome.tabs.query({ currentWindow: true });
   document.getElementById('tabCount').textContent = `${tabs.length} tabs`;
+  document.getElementById('tabCount2').textContent = `${tabs.length} tabs`;
 });
 
 // ── Action handlers ────────────────────────────────────────────────────────
@@ -141,6 +143,64 @@ async function handleCopyAllTabs() {
   }
 }
 
+// Saves each open tab as a separate file. Uses the current mode's extension
+// (.md / .json / .xml). Chrome may prompt to allow multiple downloads.
+async function handleSaveAllTabs() {
+  setStatus('Requesting permission...', 'info');
+
+  const hasPermission = await new Promise(resolve =>
+    chrome.permissions.contains({ origins: ['<all_urls>'] }, resolve)
+  );
+
+  if (!hasPermission) {
+    const granted = await new Promise(resolve =>
+      chrome.permissions.request({ origins: ['<all_urls>'] }, resolve)
+    );
+    if (!granted) {
+      setStatus('Permission denied', 'error');
+      return;
+    }
+  }
+
+  setStatus('Converting tabs...', 'info');
+  try {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    const results = await Promise.allSettled(tabs.map(async tab => {
+      try {
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+        return await chrome.tabs.sendMessage(tab.id, { action: 'getPageMeta' });
+      } catch {
+        return null;
+      }
+    }));
+
+    const successes = results
+      .filter(r => r.status === 'fulfilled' && r.value?.success)
+      .map(r => r.value);
+
+    if (successes.length === 0) {
+      setStatus('No tabs could be saved', 'error');
+      return;
+    }
+
+    const ext = { json: '.json', xml: '.xml' }[currentMode] || '.md';
+    const seen = new Map();   // dedupe collisions when slugs match
+    successes.forEach((meta, i) => {
+      const output = buildOutput(meta.markdown, meta.url, meta.title);
+      let name = slugifyUrl(meta.url);
+      const count = (seen.get(name) || 0) + 1;
+      seen.set(name, count);
+      const filename = (count > 1 ? `${name}-${count}` : name) + ext;
+      // Stagger downloads — back-to-back blob URLs can drop in Chrome
+      setTimeout(() => downloadText(filename, output), i * 120);
+    });
+
+    setStatus(`Saving ${successes.length} files`, 'success');
+  } catch (e) {
+    setStatus(e.message, 'error');
+  }
+}
+
 async function handleRecopy() {
   const text = document.getElementById('previewText').value;
   await navigator.clipboard.writeText(text);
@@ -207,13 +267,14 @@ function downloadText(filename, content) {
 
 function updateButtonLabels() {
   const labels = {
-    md:   { copy: 'Copy as Markdown', save: 'Save as .md'   },
-    json: { copy: 'Copy as JSON',     save: 'Save as .json' },
-    xml:  { copy: 'Copy for Claude',  save: 'Save as .xml'  },
+    md:   { copy: 'Copy as Markdown', save: 'Save as .md',   saveAll: 'Save all tabs as .md'   },
+    json: { copy: 'Copy as JSON',     save: 'Save as .json', saveAll: 'Save all tabs as .json' },
+    xml:  { copy: 'Copy for Claude',  save: 'Save as .xml',  saveAll: 'Save all tabs as .xml'  },
   };
   const l = labels[currentMode] || labels.md;
   document.getElementById('copyMdLabel').textContent = l.copy;
   document.getElementById('saveMdLabel').textContent = l.save;
+  document.getElementById('saveAllTabsLabel').textContent = l.saveAll;
 }
 
 // ── UI helpers ─────────────────────────────────────────────────────────────
