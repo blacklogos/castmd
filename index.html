@@ -20,9 +20,12 @@
   <meta name="twitter:title" content="castmd — Cast any page. Feed any model.">
   <meta name="twitter:description" content="Chrome extension for LLM workflows. Copy any page as MD, JSON, or Claude XML. Token-aware. Free and open source.">
 
+  <meta name="twitter:url" content="https://castmd.cc4.marketing/">
+
   <meta name="robots" content="index, follow">
   <meta name="author" content="cc4.marketing">
   <meta name="theme-color" content="#7c6af7">
+  <link rel="canonical" href="https://castmd.cc4.marketing/">
 
   <script type="application/ld+json">
   {
@@ -41,12 +44,73 @@
       "MD, JSON, and Claude XML output modes",
       "Token count estimation",
       "Model fit display — gpt-4, gpt-4o, claude, gemini",
-      "All-tabs export",
+      "All-tabs export — merge into one document",
+      "Save all tabs as separate Markdown files",
+      "Schema.org articleBody detection (every.to, news sites)",
       "Preview and edit panel",
       "Right-click context menu",
       "Keyboard shortcut Ctrl+Shift+M"
     ],
     "codeRepository": "https://github.com/blacklogos/castmd"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What does castmd do?",
+        "acceptedAnswer": { "@type": "Answer", "text": "castmd is a Chrome extension that converts any webpage to clean Markdown, JSON, or Claude XML for use with large language models. It strips navigation, sidebars, and footers and preserves inline formatting like bold, italic, links, and inline code." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does castmd send my data anywhere?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. castmd runs entirely in your browser. There is no server, no analytics, and no tracking. Conversion happens in a content script injected into the active tab, and nothing leaves your machine." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I save every open tab as Markdown files?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Open the castmd popup and click 'Save all tabs as .md'. castmd injects its content script into every tab in the current window, converts each page, and downloads each one as a separate file. Filenames are derived from the URL slug, and collisions are auto-deduped with -2, -3 suffixes. Use the MD/JSON/XML toggle to choose the export format." }
+      },
+      {
+        "@type": "Question",
+        "name": "How does the all-tabs export work?",
+        "acceptedAnswer": { "@type": "Answer", "text": "castmd offers two all-tabs modes. 'Copy all tabs' merges every open tab into a single Markdown session document, separated by horizontal rules and page titles, written to your clipboard. 'Save all tabs' downloads each tab as its own file. Both work across the current window only." }
+      },
+      {
+        "@type": "Question",
+        "name": "What output formats does castmd support?",
+        "acceptedAnswer": { "@type": "Answer", "text": "castmd supports three output modes: Markdown for general LLM use, JSON for programmatic ingestion (includes URL, title, markdown, token count, and timestamp), and Claude XML which wraps the page in Anthropic's <document> tag format used by Claude's structured prompting API." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does castmd work on every.to, Substack, and other modern publication sites?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. castmd v1.1.0 added detection for the schema.org articleBody microdata used by every.to, news sites, and many editorial platforms, plus density-based fallback detection that handles single-page-app sites without semantic HTML. If a site fails to extract correctly, open an issue on GitHub with the URL." }
+      },
+      {
+        "@type": "Question",
+        "name": "How are tokens counted in castmd?",
+        "acceptedAnswer": { "@type": "Answer", "text": "castmd estimates tokens as ceil(characters / 4), a good approximation for English-language LLM tokenizers. After every conversion it compares the result to known model context limits: gpt-4 (8K), gpt-4o (128K), Claude (200K), and Gemini (1M). Models that fit show as green chips; over-limit models are greyed out." }
+      },
+      {
+        "@type": "Question",
+        "name": "What keyboard shortcut does castmd use?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Press Ctrl+Shift+M on Windows or Linux, or Cmd+Shift+M on Mac, to copy the current page as Markdown to the clipboard. You can also right-click any page and choose 'Copy page as Markdown' from the context menu." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is castmd free and open source?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. castmd is free and open source under the project's repository at github.com/blacklogos/castmd. There is no paid tier and no account required. Install it directly from the source by loading the unpacked extension in chrome://extensions/." }
+      },
+      {
+        "@type": "Question",
+        "name": "What should I do if castmd misses the article content on a page?",
+        "acceptedAnswer": { "@type": "Answer", "text": "First reload the extension at chrome://extensions/ to ensure the latest content script is active, then close and reopen the affected tab so the script injects fresh. If the issue persists, open a GitHub issue at github.com/blacklogos/castmd/issues with the URL, and the maintainers can add site-specific detection rules." }
+      }
+    ]
   }
   </script>
 
@@ -972,7 +1036,7 @@
         <div class="feature-card">
           <div class="feature-num">04</div>
           <h3>All-Tabs Export</h3>
-          <p>Merge every open tab into one Markdown session document. Capture your entire research context in a single paste.</p>
+          <p>Merge every open tab into one document, or save each tab as its own file. Capture an entire research session in one click.</p>
         </div>
         <div class="feature-card">
           <div class="feature-num">05</div>
@@ -1133,6 +1197,14 @@ Markdown for LLM workflows.
         <details class="faq-item">
           <summary>How does all-tabs export work?</summary>
           <p>castmd injects a content script into each open tab, converts the page content to Markdown, then concatenates all pages into a single document separated by horizontal rules and page titles. The token count reflects the full combined document.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I save every tab as separate files?</summary>
+          <p>Click <strong>Save all tabs as .md</strong> in the popup. castmd downloads each tab as its own file using the URL slug as the filename. Collisions are auto-deduped with <code>-2</code>, <code>-3</code> suffixes. Use the MD/JSON/XML toggle to choose the export format.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Does castmd work on every.to and Substack-style sites?</summary>
+          <p>Yes — v1.1.0 added <code>[itemprop="articleBody"]</code> (schema.org) detection plus a paragraph-density fallback that handles SPA-rendered editorial sites. If a site fails to extract correctly, open an issue on GitHub with the URL.</p>
         </details>
         <details class="faq-item">
           <summary>How are tokens counted?</summary>
