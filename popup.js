@@ -3,6 +3,9 @@ let currentMode = 'md';
 // Last converted content for preview/re-save
 let lastContent = null;
 let lastFilename = null;
+// Confluence export state (set by detection + preview)
+let confluenceInfo = null;          // { origin, tenant, contentType, id }
+let confluencePreviewResult = null; // { nodes, truncated, rootTitle }
 
 // Model context limits (tokens) — used for fit display
 const MODEL_LIMITS = [
@@ -21,6 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('closePreview').addEventListener('click', closePreview);
   document.getElementById('recopyBtn').addEventListener('click', handleRecopy);
   document.getElementById('resaveBtn').addEventListener('click', handleResave);
+  document.getElementById('confluencePreviewBtn').addEventListener('click', handleConfluencePreview);
+  document.getElementById('confluenceDownloadBtn').addEventListener('click', handleConfluenceDownload);
 
   // Mode toggle — also updates button labels to reflect active output mode
   document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -31,10 +36,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Reset Confluence preview state when depth changes — old result is stale.
+  document.querySelectorAll('input[name="confDepth"]').forEach(r => {
+    r.addEventListener('change', resetConfluenceState);
+  });
+
   // Show tab count in badge
   const tabs = await chrome.tabs.query({ currentWindow: true });
   document.getElementById('tabCount').textContent = `${tabs.length} tabs`;
   document.getElementById('tabCount2').textContent = `${tabs.length} tabs`;
+
+  // Detect Confluence Cloud page/folder — surface the export section only when relevant.
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  confluenceInfo = (typeof ConfluenceApi !== 'undefined') ? ConfluenceApi.parseUrl(activeTab && activeTab.url) : null;
+  if (confluenceInfo) {
+    document.getElementById('confluenceSection').hidden = false;
+  }
 });
 
 // ── Action handlers ────────────────────────────────────────────────────────
@@ -313,4 +330,104 @@ function showPreview(content) {
 function closePreview() {
   document.getElementById('previewPanel').classList.remove('open');
   document.getElementById('modelFit').classList.remove('visible');
+}
+
+// ── Confluence tree export ─────────────────────────────────────────────────
+
+async function handleConfluencePreview() {
+  if (!confluenceInfo) return;
+  const depth = document.querySelector('input[name="confDepth"]:checked').value;
+  setStatus('Checking permission…', 'info');
+
+  const ok = await ensureHostPermission(confluenceInfo.origin);
+  if (!ok) { setStatus('Permission denied', 'error'); return; }
+
+  setStatus('Discovering pages…', 'info');
+  try {
+    const result = await ConfluenceExport.preview(confluenceInfo, depth);
+
+    if (result.truncated) {
+      const proceed = confirm(
+        `This subtree exceeds ${ConfluenceExport.MAX_PAGES} pages.\n\n` +
+        `Only the first ${ConfluenceExport.MAX_PAGES} will be exported. Continue?`
+      );
+      if (!proceed) { setStatus('Cancelled', 'info'); return; }
+    }
+
+    confluencePreviewResult = result;
+    const count = Math.min(result.nodes.length, ConfluenceExport.MAX_PAGES);
+    const noun = count === 1 ? 'page' : 'pages';
+    setStatus(`Found ${count} ${noun}`, 'success');
+
+    const dlBtn = document.getElementById('confluenceDownloadBtn');
+    dlBtn.hidden = false;
+    document.getElementById('confluenceDownloadLabel').textContent = `Download ZIP (${count} ${noun})`;
+  } catch (e) {
+    setStatus(`Discovery failed: ${e.message}`, 'error');
+  }
+}
+
+async function handleConfluenceDownload() {
+  if (!confluenceInfo || !confluencePreviewResult) return;
+  const { nodes, rootTitle } = confluencePreviewResult;
+
+  const progressEl = document.getElementById('confluenceProgress');
+  const barEl = document.getElementById('confluenceProgressBar');
+  const txtEl = document.getElementById('confluenceProgressText');
+  const warnEl = document.getElementById('confluenceWarn');
+  const dlBtn = document.getElementById('confluenceDownloadBtn');
+
+  progressEl.hidden = false;
+  warnEl.hidden = false;
+  dlBtn.disabled = true;
+  barEl.value = 0;
+  txtEl.textContent = '0 / ?';
+  setStatus('Fetching pages…', 'info');
+
+  try {
+    const { blob, filename, skipped } = await ConfluenceExport.exportTree(
+      confluenceInfo.origin, rootTitle, nodes,
+      (done, total) => {
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        barEl.value = pct;
+        txtEl.textContent = `${done} / ${total}`;
+      }
+    );
+
+    downloadBlob(filename, blob);
+
+    const successCount = Math.min(nodes.length, ConfluenceExport.MAX_PAGES) - skipped.length;
+    const msg = skipped.length > 0
+      ? `Exported ${successCount} pages (${skipped.length} skipped — see _skipped.txt)`
+      : `Exported ${successCount} pages`;
+    setStatus(msg, 'success');
+  } catch (e) {
+    setStatus(`Export failed: ${e.message}`, 'error');
+  } finally {
+    dlBtn.disabled = false;
+    warnEl.hidden = true;
+  }
+}
+
+function resetConfluenceState() {
+  confluencePreviewResult = null;
+  document.getElementById('confluenceDownloadBtn').hidden = true;
+  document.getElementById('confluenceProgress').hidden = true;
+  document.getElementById('confluenceWarn').hidden = true;
+}
+
+async function ensureHostPermission(origin) {
+  const pattern = origin + '/*';
+  const has = await new Promise(r => chrome.permissions.contains({ origins: [pattern] }, r));
+  if (has) return true;
+  return new Promise(r => chrome.permissions.request({ origins: [pattern] }, r));
+}
+
+function downloadBlob(filename, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

@@ -267,6 +267,62 @@
       padding: 6px 10px;
     }
 
+    /* ── Confluence tree export ── */
+    .conf-section {
+      margin-top: 10px;
+      border-top: 1px solid #f3f4f6;
+      padding-top: 10px;
+    }
+
+    .conf-depth {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 6px 0 8px;
+      padding: 6px 8px;
+      background: #fafafa;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+    }
+
+    .conf-depth label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .conf-depth input[type="radio"] {
+      accent-color: #7c6af7;
+      cursor: pointer;
+    }
+
+    .conf-actions { display: flex; flex-direction: column; gap: 4px; }
+
+    .conf-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .conf-progress progress {
+      flex: 1;
+      height: 4px;
+      accent-color: #7c6af7;
+    }
+
+    .conf-warn {
+      margin-top: 6px;
+      font-size: 10.5px;
+      color: #b45309;
+      font-style: italic;
+    }
+
     /* ── Separator ── */
     .sep {
       border: none;
@@ -391,6 +447,40 @@
       </div>
     </div>
 
+    <!-- Confluence tree export — only shown when active tab is a Confluence Cloud page/folder -->
+    <div class="conf-section" id="confluenceSection" hidden>
+      <div class="preview-header">
+        <span class="preview-label">Confluence tree export</span>
+      </div>
+      <div class="conf-depth">
+        <label><input type="radio" name="confDepth" value="0"> This page only</label>
+        <label><input type="radio" name="confDepth" value="1" checked> + Children (1 level)</label>
+        <label><input type="radio" name="confDepth" value="all"> + All descendants</label>
+      </div>
+      <div class="conf-actions">
+        <button id="confluencePreviewBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Preview tree
+        </button>
+        <button id="confluenceDownloadBtn" hidden>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span id="confluenceDownloadLabel">Download ZIP</span>
+        </button>
+      </div>
+      <div class="conf-progress" id="confluenceProgress" hidden>
+        <progress max="100" value="0" id="confluenceProgressBar"></progress>
+        <span id="confluenceProgressText">0 / 0</span>
+      </div>
+      <div class="conf-warn" id="confluenceWarn" hidden>Keep this popup open until export finishes.</div>
+    </div>
+
     <hr class="sep">
 
     <div class="footer">
@@ -399,6 +489,11 @@
     </div>
 
   </div>
+  <script src="lib/html-to-markdown.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="lib/zip-builder.js"></script>
+  <script src="lib/confluence-api.js"></script>
+  <script src="lib/confluence-export.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
