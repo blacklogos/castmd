@@ -13,7 +13,7 @@ A Chrome Extension (Manifest V3) that converts webpage HTML to Markdown, extract
 3. Click "Load unpacked" → select this directory
 4. After code changes, click the reload icon on the extension card
 
-There is no test suite. Verification is manual in the browser.
+Pure lib modules (`lib/html-to-markdown.js`, `lib/confluence-api.js`) have a node-based test suite. Run with `npm install && npm test` (devDep: `linkedom` for DOM). End-to-end verification (popup UI, content script, background worker, real Confluence calls) is still manual in the browser.
 
 ## Architecture
 

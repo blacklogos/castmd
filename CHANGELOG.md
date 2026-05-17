@@ -14,6 +14,9 @@
 - Pure HTML→Markdown conversion functions extracted into `lib/html-to-markdown.js` so popup can convert HTML fetched over the network (not just from injected content scripts)
 - `content.js` left untouched — keeps its own copy of conversion logic for live-page injection
 
+### Tests
+- Added node-based auto-tests covering `lib/html-to-markdown.js`, `lib/confluence-api.js`, and `lib/confluence-export.js` (`tests/*.test.js`, 44 cases). Includes fetch-mocked tests for `discoverTree` (depth, BFS, cursor pagination, cap truncation, 403 subtree skip, type filtering) and `exportTree` (hierarchical paths, filename collision dedupe, `_skipped.txt`, folder placeholders, progress callbacks). Run with `npm install && npm test`. Devdep: `linkedom` for DOM. Browser-coupled paths (popup/content/background) still verified manually.
+
 ## v1.1.0 — 2026-04-29
 
 ### New features
