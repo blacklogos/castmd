@@ -1,3 +1,22 @@
+## v1.2.0 — 2026-05-17
+
+### New features
+- Confluence Cloud tree export — when active tab is a Confluence Cloud page or folder, popup surfaces a new section to bulk-export the page + descendants as a ZIP of Markdown files mirroring the page hierarchy
+  - Depth selector: this page / + children / + all descendants
+  - Preview step shows page count before fetching bodies
+  - Hard cap of 100 pages with blocking confirm dialog when exceeded
+  - Permission requested on-demand for `https://{tenant}.atlassian.net/*` only
+  - Pages user can't access (403/404) are skipped and listed in `_skipped.txt`
+  - Concurrency capped at 3 in-flight requests; exponential backoff on 429
+- Vendored JSZip 3.10.1 (`vendor/jszip.min.js`, MIT/GPLv3)
+
+### Architecture
+- Pure HTML→Markdown conversion functions extracted into `lib/html-to-markdown.js` so popup can convert HTML fetched over the network (not just from injected content scripts)
+- `content.js` left untouched — keeps its own copy of conversion logic for live-page injection
+
+### Tests
+- Added node-based auto-tests covering `lib/html-to-markdown.js`, `lib/confluence-api.js`, and `lib/confluence-export.js` (`tests/*.test.js`, 44 cases). Includes fetch-mocked tests for `discoverTree` (depth, BFS, cursor pagination, cap truncation, 403 subtree skip, type filtering) and `exportTree` (hierarchical paths, filename collision dedupe, `_skipped.txt`, folder placeholders, progress callbacks). Run with `npm install && npm test`. Devdep: `linkedom` for DOM. Browser-coupled paths (popup/content/background) still verified manually.
+
 ## v1.1.0 — 2026-04-29
 
 ### New features
