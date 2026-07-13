@@ -46,6 +46,7 @@
       "Model fit display — gpt-4, gpt-4o, claude, gemini",
       "All-tabs export — merge into one document",
       "Save all tabs as separate Markdown files",
+      "Confluence Cloud tree export — page + descendants as ZIP of Markdown",
       "Schema.org articleBody detection (every.to, news sites)",
       "Preview and edit panel",
       "Right-click context menu",
@@ -68,12 +69,17 @@
       {
         "@type": "Question",
         "name": "Does castmd send my data anywhere?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. castmd runs entirely in your browser. There is no server, no analytics, and no tracking. Conversion happens in a content script injected into the active tab, and nothing leaves your machine." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. castmd runs entirely in your browser. There is no server, no analytics, and no tracking. Conversion happens in a content script injected into the active tab. The Confluence export feature talks only to your own Atlassian site using your existing browser session — nothing else leaves your machine." }
       },
       {
         "@type": "Question",
         "name": "How do I save every open tab as Markdown files?",
         "acceptedAnswer": { "@type": "Answer", "text": "Open the castmd popup and click 'Save all tabs as .md'. castmd injects its content script into every tab in the current window, converts each page, and downloads each one as a separate file. Filenames are derived from the URL slug, and collisions are auto-deduped with -2, -3 suffixes. Use the MD/JSON/XML toggle to choose the export format." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can castmd export a whole Confluence space or page tree?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. castmd v1.2.0 added Confluence Cloud tree export. Open the popup on any Confluence Cloud page, choose a depth (this page, + children, or + all descendants), preview the page count, and download a ZIP of Markdown files mirroring the page hierarchy. Exports are capped at 100 pages; inaccessible pages are skipped and listed in _skipped.txt. Host permission is requested on demand for your Atlassian tenant only." }
       },
       {
         "@type": "Question",
@@ -1048,6 +1054,11 @@
           <h3>Preview &amp; Edit</h3>
           <p>Review and tweak converted output before copying or saving. Edit inline, then re-copy or re-save in one click.</p>
         </div>
+        <div class="feature-card">
+          <div class="feature-num">07</div>
+          <h3>Confluence Tree Export</h3>
+          <p>On any Confluence Cloud page, export the page plus its children — or the whole subtree — as a ZIP of Markdown files mirroring the page hierarchy.</p>
+        </div>
       </div>
     </section>
   </div>
@@ -1192,11 +1203,15 @@ Markdown for LLM workflows.
         </details>
         <details class="faq-item">
           <summary>Does castmd send my data anywhere?</summary>
-          <p>No. castmd runs entirely in your browser. No server, no analytics, no tracking. Conversion happens in the content script injected into the active tab. Nothing leaves your machine.</p>
+          <p>No. castmd runs entirely in your browser. No server, no analytics, no tracking. Conversion happens in the content script injected into the active tab. Confluence export talks only to your own Atlassian site, using your existing browser session. Nothing else leaves your machine.</p>
         </details>
         <details class="faq-item">
           <summary>How does all-tabs export work?</summary>
           <p>castmd injects a content script into each open tab, converts the page content to Markdown, then concatenates all pages into a single document separated by horizontal rules and page titles. The token count reflects the full combined document.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can castmd export a whole Confluence space?</summary>
+          <p>v1.2.0 adds Confluence Cloud tree export. Open the popup on any Confluence page, pick a depth — this page, + children, or + all descendants — preview the page count, and download a ZIP of Markdown files that mirrors the page hierarchy. Capped at 100 pages per export; pages you can't access are skipped and listed in <code>_skipped.txt</code>.</p>
         </details>
         <details class="faq-item">
           <summary>How do I save every tab as separate files?</summary>
