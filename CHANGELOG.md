@@ -1,4 +1,4 @@
-## v1.2.0 — 2026-05-17
+## v1.2.0 — 2026-07-13
 
 ### New features
 - Confluence Cloud tree export — when active tab is a Confluence Cloud page or folder, popup surfaces a new section to bulk-export the page + descendants as a ZIP of Markdown files mirroring the page hierarchy
