@@ -23,6 +23,8 @@ popup.html/js              Extension popup UI — orchestrates all user actions
 content.js                 Injected into every page — core conversion logic
 background.js              Service worker — handles URL analysis via temp tabs
 outline.html/js            Standalone page for extracting outlines from pasted MD
+md-viewer.js/css           Content script — renders local file:// *.md files as HTML
+lib/markdown-to-html.js    Pure MD→HTML renderer (used by md-viewer.js)
 lib/html-to-markdown.js    Pure HTML→MD conversion (used by Confluence flow)
 lib/confluence-api.js      Confluence Cloud v2 REST client + tree discovery
 lib/zip-builder.js         Thin wrapper over JSZip
@@ -45,6 +47,7 @@ background.js  ──(scripting.executeScript)──►  extractContent() runs i
 - **Filename sanitization** (`sanitizeFileName` in `content.js`): uses the URL pathname slug, falls back to hostname, caps at 35 chars.
 - **Theme persistence**: stored in `chrome.storage.local` under key `theme`. Vampire theme (Easter egg) stored separately under `vampireTheme`, triggered by 5 rapid clicks on `.credits`.
 - **Confluence tree export** (`lib/confluence-*.js`): runs entirely in popup context. Discovers page tree via Confluence Cloud v2 children API (paginated, BFS, hard cap 100), fetches rendered HTML bodies (`body-format=export_view`) at concurrency 3 with 429 backoff, converts via `lib/html-to-markdown.js`, packages into a ZIP via vendored JSZip, downloads via `<a download>`. MV3 service worker is **not** used — popup-bound execution avoids worker idle-kill on multi-minute jobs. Permission for `https://{tenant}.atlassian.net/*` is requested on-demand at preview time.
+- **Local .md viewer** (`md-viewer.js` + `lib/markdown-to-html.js`): declared content script on `file:///*` with markdown-extension globs. Only activates on Chrome's plain-text viewer layout (body with a single `<pre>`), hides the raw `<pre>` (kept in DOM), and inserts a rendered `<article class="castmd-viewer">`. The renderer escapes all raw HTML (file:// pages share an origin, so passthrough would be XSS) and neutralizes `javascript:`/`data:` URLs. Requires the user to enable "Allow access to file URLs" in `chrome://extensions`; without it Chrome never injects the script.
 - **Pure conversion module** (`lib/html-to-markdown.js`): exposes `HtmlToMarkdown.htmlStringToMarkdown(html, {pageTitle})`. Intentionally duplicates pure block-converter functions from `content.js` rather than refactoring the content script (refactor risk not worth it for this feature). Adds `sanitizeTitle` which is more permissive than `content.js`'s `sanitizeFileName` — preserves spaces/case for human-readable filenames inside the ZIP.
 
 ### Permissions Used
