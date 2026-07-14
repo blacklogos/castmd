@@ -47,6 +47,7 @@
       "All-tabs export — merge into one document",
       "Save all tabs as separate Markdown files",
       "Confluence Cloud tree export — page + descendants as ZIP of Markdown",
+      "Local Markdown viewer — renders file:// *.md files as formatted HTML",
       "Schema.org articleBody detection (every.to, news sites)",
       "Preview and edit panel",
       "Right-click context menu",
@@ -110,6 +111,11 @@
         "@type": "Question",
         "name": "Is castmd free and open source?",
         "acceptedAnswer": { "@type": "Answer", "text": "Yes. castmd is free and open source under the project's repository at github.com/blacklogos/castmd. There is no paid tier and no account required. Install it directly from the source by loading the unpacked extension in chrome://extensions/." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can castmd render local Markdown files in the browser?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. castmd v1.3.0 added a local .md viewer: open a file:// URL ending in .md and it renders as formatted HTML with headings, fenced code blocks, tables, task lists, and automatic dark mode. Enable 'Allow access to file URLs' on the castmd card in chrome://extensions/ first; Chrome blocks extensions from file:// pages without it. The raw source is kept intact behind the rendered view, and all HTML in the file is escaped for safety." }
       },
       {
         "@type": "Question",
@@ -1072,6 +1078,11 @@
           <h3>Confluence Tree Export</h3>
           <p>On any Confluence Cloud page, export the page plus its children — or the whole subtree — as a ZIP of Markdown files mirroring the page hierarchy.</p>
         </div>
+        <div class="feature-card">
+          <div class="feature-num">08</div>
+          <h3>Local .md Viewer</h3>
+          <p>Open any <code>file:///…/*.md</code> file and it renders as formatted HTML: headings, code blocks, tables, task lists, dark mode. No more raw text walls.</p>
+        </div>
       </div>
     </section>
   </div>
@@ -1237,6 +1248,10 @@ Markdown for LLM workflows.
         <details class="faq-item">
           <summary>How are tokens counted?</summary>
           <p>castmd estimates tokens as <code>ceil(characters / 4)</code> — a good approximation for English-language LLM tokenizers. It then compares against known context limits: gpt-4 (8k), gpt-4o (128k), Claude (200k), Gemini (1M).</p>
+        </details>
+        <details class="faq-item">
+          <summary>Can castmd render local Markdown files?</summary>
+          <p>Yes, since v1.3.0. Open any <code>file:///…/*.md</code> file and castmd renders it as formatted HTML: headings, fenced code, tables, task lists, dark mode. One-time setup: enable <strong>Allow access to file URLs</strong> on the castmd card in <code>chrome://extensions/</code>. Chrome injects nothing into <code>file://</code> pages without that toggle. Raw HTML inside the file is always escaped, so untrusted documents render safely.</p>
         </details>
         <details class="faq-item">
           <summary>What keyboard shortcut does castmd use?</summary>
