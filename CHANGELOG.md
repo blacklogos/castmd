@@ -1,3 +1,18 @@
+## v1.3.0 — 2026-07-14
+
+### New features
+- Local .md file viewer: opening a `file:///…/*.md` file renders it as formatted HTML (GitHub-style, light/dark via `prefers-color-scheme`). Requires enabling "Allow access to file URLs" on the extension card in `chrome://extensions`
+  - Supports ATX headings (with anchor ids), fenced code blocks, nested lists, task lists, GFM tables, blockquotes, inline formatting, links, images
+  - Activates only on Chrome's plain-text viewer layout; raw source stays in the DOM, hidden
+  - Hardened for untrusted input: raw HTML escaped (never passed through), `javascript:`/`data:` URLs neutralized with control-char stripping, nesting recursion capped at depth 100 (a 5KB file of `>` chars previously would have crashed the renderer)
+
+### Architecture
+- New pure module `lib/markdown-to-html.js` (MD→HTML), IIFE pattern matching `lib/html-to-markdown.js`; no DOM dependency
+- Content script declared in manifest for `file:///*` with markdown-extension globs; conversion runs entirely in-page, no service worker involvement
+
+### Tests
+- 35 new node:test cases for `lib/markdown-to-html.js` covering all block types, XSS escaping, URL scheme filtering, and stack-depth regressions (suite now 79 cases)
+
 ## v1.2.0 — 2026-07-13
 
 ### New features
