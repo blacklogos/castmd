@@ -11,6 +11,15 @@
     "tabs"
   ],
   "optional_host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["file:///*"],
+      "include_globs": ["*.md", "*.MD", "*.markdown", "*.mdown", "*.mkd"],
+      "js": ["lib/markdown-to-html.js", "md-viewer.js"],
+      "css": ["md-viewer.css"],
+      "run_at": "document_end"
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
