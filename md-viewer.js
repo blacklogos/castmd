@@ -20,8 +20,17 @@
   const body = document.body;
   if (!body || body.children.length !== 1 || body.children[0].tagName !== 'PRE') return;
 
+  // Guard 3: the renderer lib must have loaded (manifest lists it first, but a
+  // failed load shouldn't produce an uncaught TypeError). Any renderer error
+  // falls back to Chrome's raw <pre> view rather than breaking the page.
+  if (!window.MarkdownToHtml) return;
   const raw = body.children[0].textContent || '';
-  const html = window.MarkdownToHtml.markdownToHtml(raw);
+  let html;
+  try {
+    html = window.MarkdownToHtml.markdownToHtml(raw);
+  } catch (e) {
+    return;
+  }
 
   // Title: first H1 text if present, else the filename.
   const h1 = raw.match(/^#\s+(.+?)\s*#*\s*$/m);

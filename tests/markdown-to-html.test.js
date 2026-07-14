@@ -99,6 +99,26 @@ test('security — safeUrl allows normal schemes and relative paths', () => {
   assert.equal(safeUrl('vbscript:x'), '#');
 });
 
+test('security — safeUrl strips control chars before scheme check (java\\tscript bypass)', () => {
+  assert.equal(safeUrl('java\tscript:alert(1)'), '#');
+  assert.equal(safeUrl('java\nscript:alert(1)'), '#');
+  assert.equal(safeUrl('\u0000javascript:alert(1)'), '#');
+});
+
+test('security — deep blockquote nesting does not blow the stack', () => {
+  // ~5KB of ">" used to throw RangeError via unbounded recursion
+  const html = markdownToHtml('>'.repeat(5000) + ' x');
+  assert.equal(typeof html, 'string');
+  assert.doesNotMatch(html, /<script/);
+});
+
+test('security — deep list nesting does not blow the stack, renders flat past cap', () => {
+  const md = Array.from({ length: 300 }, (_, d) => `${'  '.repeat(d)}- item${d}`).join('\n');
+  const html = markdownToHtml(md);
+  assert.equal(typeof html, 'string');
+  assert.match(html, /item299/);
+});
+
 test('security — escapeHtml covers the four metacharacters', () => {
   assert.equal(escapeHtml('<a href="x" & y>'), '&lt;a href=&quot;x&quot; &amp; y&gt;');
 });
