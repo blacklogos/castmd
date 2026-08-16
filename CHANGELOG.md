@@ -1,3 +1,10 @@
+## v1.3.1 — 2026-08-16
+
+### Bug fixes
+- Fixed "Error when click on the ext" (#3): `content.js` was re-injected into the same tab's isolated world on every action (popup click, context menu, keyboard shortcut). Its top-level `const CONTENT_VERSION` threw `Identifier 'CONTENT_VERSION' has already been declared` on the 2nd+ action against the same tab. Wrapped the file in an IIFE so each injection gets its own function scope
+- `background.js`'s context-menu / `Ctrl+Shift+M` path had no error handling for that failure and silently did nothing; added try/catch and an error badge (✗) so a failure is now visible
+- Fixed popup window ballooning to ~800px wide with empty space after opening the preview panel alongside the Confluence export section. Root cause: unbounded `body` height pushed the document past Chrome's popup auto-sizing range, triggering an oversized fallback that never shrank back. Capped `body` at `max-height: 600px` with internal scrolling
+
 ## v1.3.0 — 2026-07-14
 
 ### New features
