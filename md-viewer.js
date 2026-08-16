@@ -6,6 +6,13 @@
 // Chrome displays a plain-text file as a document whose body contains a single
 // <pre> with the raw source. We read that text, convert it with
 // lib/markdown-to-html.js (loaded before this script), and swap the body.
+//
+// Declared with "world": "MAIN" (not the default isolated world) so its Save
+// button can call showSaveFilePicker() directly — that API is not exposed to
+// isolated-world content scripts, and relaying it through the background
+// service worker loses the transient user activation the picker requires.
+// This file and lib/markdown-to-html.js must stay free of chrome.* API calls;
+// adding one here would silently break (MAIN world has no chrome.* access).
 
 (function () {
   'use strict';
