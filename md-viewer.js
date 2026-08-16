@@ -78,13 +78,15 @@
   const toolbar = document.createElement('div');
   toolbar.className = 'castmd-toolbar';
   const toggleBtn = makeButton('Edit');
+  const copyPathBtn = makeButton('Copy path');
+  copyPathBtn.title = 'Copy this file’s path — paste into the save dialog (Cmd+Shift+G on macOS) to jump straight to its folder';
   const saveBtn = makeButton('Save');
   saveBtn.hidden = true;
   const status = document.createElement('span');
   status.className = 'castmd-status';
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
-  toolbar.append(toggleBtn, saveBtn, status);
+  toolbar.append(toggleBtn, copyPathBtn, saveBtn, status);
 
   function setStatus(text) {
     status.textContent = text;
@@ -101,6 +103,15 @@
   }
 
   toggleBtn.addEventListener('click', () => setEditing(editor.hidden));
+
+  copyPathBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(decodeURIComponent(location.pathname));
+      setStatus('Path copied');
+    } catch (e) {
+      setStatus(`Copy failed: ${e.message}`);
+    }
+  });
 
   if (!window.showSaveFilePicker) {
     saveBtn.disabled = true;
