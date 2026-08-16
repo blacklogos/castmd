@@ -17,19 +17,33 @@ chrome.runtime.onStartup.addListener(setupContextMenus);
 // via an injected function — more reliable than content script clipboard write
 // after context menu interactions (page focus may be lost).
 async function convertAndCopyViaBackground(tabId, action) {
-  await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
-  const response = await chrome.tabs.sendMessage(tabId, { action });
-  if (!response?.success) return;
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
+    const response = await chrome.tabs.sendMessage(tabId, { action });
+    if (!response?.success) {
+      showBadge(tabId, '✗', '#f87171');
+      return;
+    }
 
-  const text = response.markdown;
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    func: async (t) => { await navigator.clipboard.writeText(t); },
-    args: [text]
-  });
+    const text = response.markdown;
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async (t) => { await navigator.clipboard.writeText(t); },
+      args: [text]
+    });
 
-  chrome.action.setBadgeText({ text: '✓', tabId });
-  chrome.action.setBadgeBackgroundColor({ color: '#4ade80', tabId });
+    showBadge(tabId, '✓', '#4ade80');
+  } catch (error) {
+    // No popup UI on this path (context menu / keyboard shortcut) to surface the
+    // error in, so at least flip the badge instead of failing silently.
+    console.error('castmd: convertAndCopyViaBackground failed', error);
+    showBadge(tabId, '✗', '#f87171');
+  }
+}
+
+function showBadge(tabId, text, color) {
+  chrome.action.setBadgeText({ text, tabId });
+  chrome.action.setBadgeBackgroundColor({ color, tabId });
   setTimeout(() => chrome.action.setBadgeText({ text: '', tabId }), 2000);
 }
 

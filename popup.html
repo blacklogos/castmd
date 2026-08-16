@@ -5,8 +5,20 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Chrome sizes the popup window itself from the document's rendered box, not just
+       CSS width. With unbounded body height, stacking the preview panel + Confluence
+       section can push the document past ~600px tall, which pushes Chrome into an
+       oversized fallback popup (observed: 800px wide) that doesn't shrink back even
+       though body's own computed width stays correctly pinned at 300px. Capping body's
+       height and scrolling the overflow internally keeps the document in the range
+       Chrome auto-sizes correctly. */
+    html { overflow-x: hidden; }
+
     body {
       width: 300px;
+      max-height: 600px;
+      overflow-x: hidden;
+      overflow-y: auto;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       background: #ffffff;
       color: #111827;
@@ -236,6 +248,7 @@
 
     .preview-textarea {
       width: 100%;
+      max-width: 100%;
       height: 140px;
       background: #fafafa;
       color: #374151;
