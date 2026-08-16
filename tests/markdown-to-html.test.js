@@ -203,6 +203,46 @@ test('hr — dashes, asterisks, underscores', () => {
   assert.equal(markdownToHtml('___'), '<hr>\n');
 });
 
+// ── Frontmatter ─────────────────────────────────────────────────────────────
+
+test('frontmatter — leading YAML block is stripped, content renders', () => {
+  const html = markdownToHtml('---\ntitle: Now\nupdated: 2026-08-16\n---\n# Hello\n\nbody');
+  assert.doesNotMatch(html, /<hr>/);
+  assert.doesNotMatch(html, /title: Now/);
+  assert.match(html, /^<h1 id="hello">Hello<\/h1>/);
+});
+
+test('frontmatter — absent, document unchanged', () => {
+  assert.equal(markdownToHtml('# Hello\n\nbody'), '<h1 id="hello">Hello</h1>\n<p>body</p>\n');
+});
+
+test('frontmatter — unterminated fence is not frontmatter', () => {
+  const html = markdownToHtml('---\ntitle: Now\n\nbody');
+  assert.match(html, /<hr>/);
+  assert.match(html, /title: Now/);
+  assert.match(html, /body/);
+});
+
+test('frontmatter — mid-document --- stays a horizontal rule', () => {
+  const html = markdownToHtml('# A\n\n---\n\ntitle: not frontmatter\n\n---\n\nend');
+  const hrCount = (html.match(/<hr>/g) || []).length;
+  assert.equal(hrCount, 2);
+  assert.match(html, /<p>title: not frontmatter<\/p>/);
+});
+
+test('frontmatter — empty block', () => {
+  const html = markdownToHtml('---\n---\n# H');
+  assert.doesNotMatch(html, /<hr>/);
+  assert.match(html, /^<h1 id="h">H<\/h1>/);
+});
+
+test('frontmatter — CRLF frontmatter stripped too', () => {
+  const html = markdownToHtml('---\r\ntitle: Now\r\nupdated: 2026-08-16\r\n---\r\n# Hello\r\n\r\nbody');
+  assert.doesNotMatch(html, /<hr>/);
+  assert.doesNotMatch(html, /title: Now/);
+  assert.match(html, /^<h1 id="hello">Hello<\/h1>/);
+});
+
 // ── Edge cases ──────────────────────────────────────────────────────────────
 
 test('edge — empty and null input', () => {
