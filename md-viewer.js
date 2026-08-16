@@ -57,6 +57,10 @@
   body.insertBefore(container, rawPre);
 
   // ── Editor ──────────────────────────────────────────────────────────────
+  // Kept for the lifetime of this page load only. Re-picking after a reload is
+  // intentional (no IndexedDB persistence; see plan, deliberately deferred).
+  let fileHandle = null;
+
   function makeButton(label) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -97,7 +101,32 @@
   }
 
   toggleBtn.addEventListener('click', () => setEditing(editor.hidden));
-  saveBtn.addEventListener('click', () => setStatus('Not wired yet')); // Phase 04
+
+  if (!window.showSaveFilePicker) {
+    saveBtn.disabled = true;
+    saveBtn.title = 'Saving needs a Chromium browser with the File System Access API';
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    const text = editor.value;
+    try {
+      // FIRST await must be the picker. Anything awaited before it can burn the
+      // transient user activation and make showSaveFilePicker throw SecurityError.
+      if (!fileHandle) {
+        fileHandle = await window.showSaveFilePicker({ suggestedName: fileName });
+      }
+      const writable = await fileHandle.createWritable();
+      await writable.write(text);
+      await writable.close();
+      rawPre.textContent = text; // keep the hidden "view source" copy honest
+      setStatus('Saved');
+    } catch (e) {
+      if (e && e.name === 'AbortError') { setStatus(''); return; } // user cancelled
+      fileHandle = null; // force a fresh picker next click
+      setStatus(`Save failed: ${e.message}`);
+    }
+  });
+
   body.insertBefore(toolbar, container);
   body.insertBefore(editor, rawPre);
 })();
