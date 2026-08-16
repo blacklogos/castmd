@@ -16,7 +16,7 @@ A Chrome extension that converts webpages to clean Markdown for LLM workflows. O
 - **Right-click** — "Copy page as Markdown" from any page
 - **Keyboard shortcut** — `Ctrl+Shift+M`
 - **Preview & edit** — Review and tweak output before re-copying or saving
-- **Local .md viewer** — Open a `file:///…/*.md` file and it renders as formatted HTML (requires "Allow access to file URLs" on the extension card in `chrome://extensions`)
+- **Local .md viewer + editor** — Open a `file:///…/*.md` file and it renders as formatted HTML; click Edit to modify it and Save to write back to disk (requires "Allow access to file URLs" on the extension card in `chrome://extensions`). Chrome asks where to save once per page load; the file is overwritten as-is, so close it in other editors first
 
 ## Install
 
