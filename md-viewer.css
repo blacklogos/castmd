@@ -14,7 +14,7 @@
 }
 
 /* Chrome's plain-text viewer sets body margins; normalize behind our article */
-body:has(> .castmd-viewer) {
+body:has(> .castmd-viewer), body:has(> .castmd-toolbar) {
   margin: 0;
   background: #ffffff;
 }
@@ -96,10 +96,67 @@ body:has(> .castmd-viewer) {
   margin: 1.5em 0;
 }
 
+/* Edit/Save toolbar + textarea (md-viewer.js) */
+.castmd-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 8px 1.5rem;
+  background: #ffffff;
+}
+
+.castmd-btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #374151;
+  cursor: pointer;
+}
+
+.castmd-btn:hover { border-color: #a78bfa; }
+
+.castmd-status { font-size: 12px; color: #9ca3af; }
+
+.castmd-editor {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 800px;
+  min-height: 70vh;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  resize: vertical;
+  outline: none;
+}
+
+.castmd-editor:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(124, 106, 247, 0.06);
+}
+
+@media print {
+  .castmd-toolbar { display: none; }
+}
+
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   .castmd-viewer,
-  body:has(> .castmd-viewer) {
+  body:has(> .castmd-viewer), body:has(> .castmd-toolbar) {
     background: #0d1117;
     color: #f0f6fc;
   }
@@ -112,4 +169,8 @@ body:has(> .castmd-viewer) {
   .castmd-viewer th { background: #161b22; }
   .castmd-viewer tr:nth-child(2n) td { background: #161b22; }
   .castmd-viewer hr { border-color: #3d444d; }
+
+  .castmd-toolbar { background: #0d1117; }
+  .castmd-btn { background: #161b22; color: #f0f6fc; border-color: #3d444d; }
+  .castmd-editor { background: #0d1117; color: #f0f6fc; border-color: #3d444d; }
 }

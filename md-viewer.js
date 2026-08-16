@@ -55,4 +55,49 @@
   rawPre.hidden = true;
 
   body.insertBefore(container, rawPre);
+
+  // ── Editor ──────────────────────────────────────────────────────────────
+  function makeButton(label) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'castmd-btn';
+    btn.textContent = label;
+    return btn;
+  }
+
+  const editor = document.createElement('textarea');
+  editor.className = 'castmd-editor';
+  editor.spellcheck = false;
+  editor.value = raw; // raw source, frontmatter included
+  editor.hidden = true;
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'castmd-toolbar';
+  const toggleBtn = makeButton('Edit');
+  const saveBtn = makeButton('Save');
+  saveBtn.hidden = true;
+  const status = document.createElement('span');
+  status.className = 'castmd-status';
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  toolbar.append(toggleBtn, saveBtn, status);
+
+  function setStatus(text) {
+    status.textContent = text;
+    if (text) setTimeout(() => { if (status.textContent === text) status.textContent = ''; }, 4000);
+  }
+
+  function setEditing(on) {
+    editor.hidden = !on;
+    container.hidden = on;
+    saveBtn.hidden = !on;
+    toggleBtn.textContent = on ? 'Preview' : 'Edit';
+    if (on) editor.focus();
+    else container.innerHTML = window.MarkdownToHtml.markdownToHtml(editor.value);
+  }
+
+  toggleBtn.addEventListener('click', () => setEditing(editor.hidden));
+  saveBtn.addEventListener('click', () => setStatus('Not wired yet')); // Phase 04
+  body.insertBefore(toolbar, container);
+  body.insertBefore(editor, rawPre);
 })();
