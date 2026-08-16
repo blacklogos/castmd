@@ -1,3 +1,10 @@
+// Wrapped in an IIFE — chrome.scripting.executeScript({files:['content.js']}) re-injects
+// this file into the tab's isolated world on every action (popup click, context menu,
+// keyboard shortcut). That world persists across injections, so top-level const/let
+// bindings would throw "Identifier has already been declared" on the 2nd+ injection.
+// The IIFE gives each injection its own function scope instead.
+(function () {
+
 // Version-based guard — ensures new listeners register when content.js is updated.
 // Simple boolean guard would keep stale listeners across extension reloads.
 const CONTENT_VERSION = '1.1.0';
@@ -287,3 +294,5 @@ function sanitizeFileName(url) {
     return 'page-content';
   }
 }
+
+})();
