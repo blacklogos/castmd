@@ -77,6 +77,15 @@
 
   const toolbar = document.createElement('div');
   toolbar.className = 'castmd-toolbar';
+
+  const brand = document.createElement('span');
+  brand.className = 'castmd-brand';
+  const brandMark = document.createElement('strong');
+  brandMark.textContent = 'cast';
+  const brandDot = document.createElement('em');
+  brandDot.textContent = 'md';
+  brand.append(brandMark, brandDot);
+
   const toggleBtn = makeButton('Edit');
   const copyPathBtn = makeButton('Copy path');
   copyPathBtn.title = 'Copy this file’s path — paste into the save dialog (Cmd+Shift+G on macOS) to jump straight to its folder';
@@ -86,7 +95,7 @@
   status.className = 'castmd-status';
   status.setAttribute('role', 'status');
   status.setAttribute('aria-live', 'polite');
-  toolbar.append(toggleBtn, copyPathBtn, saveBtn, status);
+  toolbar.append(brand, toggleBtn, copyPathBtn, saveBtn, status);
 
   function setStatus(text) {
     status.textContent = text;
