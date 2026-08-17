@@ -17,7 +17,8 @@
       "include_globs": ["*.md", "*.MD", "*.markdown", "*.mdown", "*.mkd"],
       "js": ["lib/markdown-to-html.js", "md-viewer.js"],
       "css": ["md-viewer.css"],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "world": "MAIN"
     }
   ],
   "action": {
