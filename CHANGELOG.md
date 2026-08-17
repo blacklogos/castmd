@@ -1,3 +1,25 @@
+## v1.4.0 — 2026-08-17
+
+### New features
+- Edit and save local `.md` files from the file:// viewer: an Edit button swaps the rendered page for a plain textarea, Save writes back to disk via the File System Access API
+  - First Save per page load opens the native file picker (Chromium requires a user-chosen destination); later Saves in the same page load write silently
+  - The picker cannot be pre-pointed at the file's own folder, so the first save is effectively "Save As" onto the original path — a new Copy path button copies the file's absolute path so you can jump straight to its folder (`Cmd+Shift+G` on macOS) instead of browsing manually
+  - No conflict detection: if the file changed on disk since it was opened, the save overwrites it (last write wins)
+  - Handle is not persisted across reloads — the picker reappears once per page load
+
+### Bug fixes
+- Local .md viewer garbled YAML frontmatter: a leading `---` block rendered as a stray `<hr>` plus the metadata fields as a paragraph, above the real content. A leading frontmatter block is now stripped before rendering (a `---` anywhere else is still a horizontal rule); the editor still sees the raw source, so frontmatter survives a save
+- Viewer toolbar (Edit/Copy path/Save) rendered in the browser's default serif font instead of the intended sans-serif stack
+
+### Architecture
+- `file:///*` content script now declared with `"world": "MAIN"`. `showSaveFilePicker` is not exposed to isolated-world content scripts, and relaying the call through the service worker loses the transient user activation the picker requires. `md-viewer.js` and `lib/markdown-to-html.js` use no `chrome.*` API, so the move costs nothing — but they must stay that way
+
+### UI
+- Viewer toolbar redesigned to match the popup's visual style: castmd wordmark, button shadow and violet hover glow, border separating it from the article content, dark mode included
+
+### Tests
+- 6 new node:test cases for frontmatter handling in `lib/markdown-to-html.js` (present, absent, unterminated, mid-document `---`, empty block, CRLF). Suite now 85 cases
+
 ## v1.3.1 — 2026-08-16
 
 ### Bug fixes
