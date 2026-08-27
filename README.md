@@ -35,6 +35,10 @@ Open the popup → choose output mode (MD / JSON / XML) → click an action.
 | Copy all tabs | All open tabs merged → clipboard |
 | Copy for Claude | Page wrapped in `<document>` XML tags |
 
+## Support
+
+castmd is free and open source. If it saves you time, you can [help keep it that way](https://cc4.marketing/?utm_source=castmd&utm_medium=readme&utm_campaign=footer-donate#donate).
+
 ## Credits
 
 Built by [cc4.marketing](https://cc4.marketing)
