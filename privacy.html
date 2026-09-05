@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy · castmd</title>
+  <meta name="description" content="castmd privacy policy. The extension collects no data, sends nothing to the developer, and converts pages locally in your browser.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://castmd.cc4.marketing/privacy">
+  <meta name="theme-color" content="#7c6af7">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f0e8;
+      --accent: #7c6af7;
+      --accent-light: #ede4ff;
+      --text: #141414;
+      --text-muted: #3a3a3a;
+      --white: #ffffff;
+      --radius: 16px;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-serif: 'Fraunces', serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text); font-family: var(--font-mono);
+      font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+    }
+    header { border-bottom: 1px solid rgba(20,20,20,.1); }
+    .inner { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { font-family: var(--font-serif); font-size: 21px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--accent); }
+    .header-link { color: var(--text-muted); text-decoration: none; font-size: 13px; }
+    .header-link:hover { color: var(--accent); }
+    main { padding: 56px 0 72px; }
+    h1 { font-family: var(--font-serif); font-size: 40px; line-height: 1.1; letter-spacing: -1px; }
+    .updated { margin-top: 12px; font-size: 13px; color: var(--text-muted); }
+    .lede { margin-top: 26px; font-size: 17px; }
+    h2 {
+      font-family: var(--font-serif); font-size: 22px; margin: 42px 0 12px;
+      padding-top: 22px; border-top: 1px solid rgba(20,20,20,.1);
+    }
+    p { margin-top: 12px; color: var(--text-muted); }
+    ul { margin: 14px 0 0 20px; color: var(--text-muted); }
+    li { margin-bottom: 8px; }
+    code {
+      background: var(--accent-light); color: #4b3fbb; padding: 1px 6px;
+      border-radius: 6px; font-size: .92em;
+    }
+    a { color: var(--accent); }
+    .card {
+      background: var(--white); border-radius: var(--radius); padding: 22px 24px;
+      margin-top: 22px; border: 1px solid rgba(20,20,20,.07);
+    }
+    .card strong { display: block; font-family: var(--font-serif); font-size: 18px; margin-bottom: 6px; }
+    footer { border-top: 1px solid rgba(20,20,20,.1); padding: 22px 0; font-size: 13px; color: var(--text-muted); }
+    .footer-inner { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; }
+    .footer-links a { margin-left: 16px; text-decoration: none; }
+    @media (max-width: 620px) { h1 { font-size: 30px; } main { padding: 36px 0 48px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="inner header-inner">
+      <a href="/" class="logo">cast<span>md</span></a>
+      <a href="/" class="header-link">Back to castmd</a>
+    </div>
+  </header>
+
+  <main class="inner">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: 26 August 2026 · castmd v1.4.0</p>
+
+    <p class="lede">castmd is a Chrome extension that converts the web page you are viewing, or a
+    local Markdown file you open, into Markdown, JSON, or XML. All of that happens on your own
+    device.</p>
+
+    <div class="card">
+      <strong>The short version</strong>
+      castmd collects no data. No analytics, no telemetry, no accounts, no cookies, no identifiers.
+      The developer receives nothing from your use of the extension.
+    </div>
+
+    <h2>What castmd does with page content</h2>
+    <p>When you invoke castmd (toolbar click, the right-click item, or the keyboard shortcut), it
+    reads the content of the page you acted on and converts it in your browser. The result goes to
+    your clipboard or to a file you download. Nothing is stored by the extension after the popup
+    closes, and nothing is transmitted to the developer or to any third party.</p>
+    <p>castmd does not run on pages you have not acted on, and it does not insert scripts, ads, or
+    links into pages you visit.</p>
+
+    <h2>Network requests</h2>
+    <p>castmd makes network requests in exactly one case. When you start a Confluence tree export,
+    it fetches page content from your own Confluence Cloud site
+    (<code>https://your-tenant.atlassian.net</code>) using the session you are already signed in
+    with. Those requests go directly from your browser to Atlassian. No other network requests are
+    made, and no remote code is ever loaded or executed.</p>
+
+    <h2>Local Markdown files</h2>
+    <p>If you turn on "Allow access to file URLs" for castmd, opening a <code>.md</code> file from
+    disk renders it as formatted HTML. Clicking Save writes your edits back through Chrome's own
+    file picker, so the write target is always a location you chose. File contents never leave your
+    machine.</p>
+
+    <h2>Permissions and why they exist</h2>
+    <ul>
+      <li><code>activeTab</code> and <code>scripting</code>: read and convert the page you
+      explicitly act on.</li>
+      <li><code>clipboardWrite</code>: put the result on your clipboard when you pick a Copy
+      action.</li>
+      <li><code>contextMenus</code>: add the right-click item "Copy page as Markdown".</li>
+      <li><code>tabs</code>: list the open tabs, with their titles and URLs, for the "Copy all
+      tabs" and "Save all tabs" actions, and to detect whether the current page is a Confluence
+      page.</li>
+      <li>Optional host access: never granted at install. Requested at runtime only for the export
+      you started, and only for the site it targets.</li>
+    </ul>
+
+    <h2>Children</h2>
+    <p>castmd is a developer and productivity tool. It is not directed at children and collects no
+    information from anyone, including children.</p>
+
+    <h2>Changes</h2>
+    <p>Any change to this policy is published at this URL and noted in the extension changelog.
+    The source is public, so you can verify every claim on this page:
+    <a href="https://github.com/blacklogos/castmd">github.com/blacklogos/castmd</a>.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy: <a href="https://github.com/blacklogos/castmd/issues">open an issue on GitHub</a>
+    (github.com/blacklogos/castmd/issues).</p>
+  </main>
+
+  <footer>
+    <div class="inner footer-inner">
+      <span>castmd v1.4.0 · Cast any page. Feed any model.</span>
+      <div class="footer-links">
+        <a href="https://github.com/blacklogos/castmd" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://castmd.cc4.marketing/" target="_blank" rel="noopener">Home</a>
+        <a href="https://cc4.marketing" target="_blank" rel="noopener">cc4.marketing</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
