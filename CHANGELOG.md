@@ -1,16 +1,20 @@
 ## Unreleased
 
 ### Bug fixes
-- Page conversion emitted duplicate content: inline `<code>` inside a paragraph, a nested `<ul>`/`<ol>`, and `<p>` wrapped inside an `<li>` were each rendered twice — once by the block that owns them and once by the flat element pass. The stray copy also landed mid-line, so the heading that followed it stopped being a heading. Blocks already rendered by an ancestor are now skipped (`content.js` and `lib/html-to-markdown.js`, both affected the page flows and the Confluence export)
+- Page conversion emitted duplicate content: inline `<code>` inside a paragraph or a heading, a nested `<ul>`/`<ol>`, and `<p>` wrapped inside an `<li>` were each rendered twice — once by the block that owns them and once by the flat element pass. The stray copy also landed mid-line, so the heading that followed it stopped being a heading. Ancestor ownership is now explicit: `pre`/`table` cover their whole subtree, `p`/`li`/`h1`–`h6` cover inline descendants only (`content.js` and `lib/html-to-markdown.js`, so both the page flows and the Confluence export)
+- A `<pre>` or `<table>` nested inside a list item is no longer flattened into the item's text: the item keeps its prose and the block keeps its fence or its rows. A list behind a `<div>` inside an `<li>`, or hanging straight off another list, used to disappear entirely under the first version of the ownership check
+- A `<code>` element that no block owns now ends its own line instead of running into the next block — bare code chips between headings are common in API docs
+- Nested tables folded their rows and cells into the outer table (`handleTable` reached through `querySelectorAll`); rows and cells are now matched to their own table
 - Paragraphs kept the source HTML's line wrapping, so a paragraph broken across source lines came out with hard newlines and leading spaces (4+ spaces of indentation would even open a code block). Whitespace runs now collapse to one space
-- `<br>` no longer loses its Markdown hard break: the two trailing spaces used to be collapsed to one, which renders as a plain space
+- `<br>` no longer loses its Markdown hard break: the two trailing spaces used to be collapsed to one, which renders as a plain space. The hard-break pass also no longer treats a literal NUL in page text as a break
+- `" .zip"` and `" .md"` keep their space: the space-before-punctuation cleanup now requires whitespace or end of string after the punctuation
 - Confluence export progress bar stopped short of 100% whenever a page was skipped (403 or fetch error), leaving a finished export looking hung. Progress now counts attempts
 - Context menu handler no longer throws when Chrome reports a click without a tab
 - `parseUrl` rejects `http://` tenants, so the popup can no longer ask for host permission on a cleartext origin
 
 ### Tests
 - New e2e suite: the extension is loaded unpacked into Chrome for Testing and driven with puppeteer — popup init and error paths, content-script injection and re-injection, markdown/JSON/XML downloads, all-tabs fan-out, the service worker clipboard path, the local `.md` viewer/editor including a hostile-input XSS check, and the full Confluence export against a stubbed tenant (real fetch, real JSZip, real ZIP download). `npm run test:e2e`, `npm run test:all`
-- Unit suite grew to 93 cases: block-duplication regressions, source-wrapping collapse, hard breaks, ZIP-path traversal in `sanitizeTitle`, https-only tenant parsing
+- Unit suite grew to 104 cases: block-ownership regressions for every nesting shape that broke (code in headings, `<pre>`/`<table>` in list items, div-wrapped and malformed nested lists, nested tables), source-wrapping collapse, hard breaks, ZIP-path traversal in `sanitizeTitle`, https-only tenant parsing
 
 ### Cleanup
 - Removed dead code from `content.js`: the unused `convertAndCopy` message branch, its `writeToClipboard` helper, and `sanitizeFileName` (filenames are the popup's job). Every action re-injects this file into the page, so the trim is on the hot path

@@ -93,6 +93,9 @@ test('Save as .md downloads converted markdown for the active tab', async () => 
   assert.match(md, /\| Model \| Context \|\n\| --- \| --- \|\n\| gpt-4 \| 8k \|\n\| claude \| 200k \|/);
   assert.match(md, /`castmd --flag`\n\n## Notes\n/, 'a bare code chip must not swallow the next heading');
   assert.match(md, /Exports land as \.md files, or as \.json when the mode says so\./);
+  assert.match(md, /^## Steps with --flag$/m, 'code inside a heading stays in the heading');
+  assert.doesNotMatch(md, /^`--flag`$/m, 'and is not emitted a second time as its own block');
+  assert.match(md, /- install it\n\n```bash\nnpm install\n```/, 'a code block inside a list item keeps its fence');
   assert.doesNotMatch(md, /Nav link/, 'nav must be skipped');
   assert.doesNotMatch(md, /Footer text/, 'footer must be skipped');
   assert.doesNotMatch(md, /Sidebar text/, 'sidebar must be skipped');
