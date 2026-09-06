@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fixture article — castmd e2e</title>
+  <meta property="og:title" content="Fixture Article">
+</head>
+<body>
+  <nav class="nav"><a href="/nope">Nav link that must be skipped</a><p>navigation filler text that is long enough to matter</p></nav>
+  <header role="banner"><h2>Banner heading that must be skipped</h2></header>
+
+  <article>
+    <h1>Fixture Article</h1>
+    <p>Intro paragraph with <strong>bold</strong>, <em>italic</em>, <code>inline_code</code>,
+       a <a href="https://example.com/docs">link</a> and <del>struck text</del>.</p>
+    <h2>Code</h2>
+    <pre><code class="language-python">def hello(name):
+    return f"hi {name}"</code></pre>
+    <h2>Lists</h2>
+    <ul>
+      <li>first bullet</li>
+      <li>second bullet
+        <ul><li>nested bullet</li></ul>
+      </li>
+    </ul>
+    <ol>
+      <li>step one</li>
+      <li>step two</li>
+    </ol>
+    <h2>Table</h2>
+    <table>
+      <thead><tr><th>Model</th><th>Context</th></tr></thead>
+      <tbody>
+        <tr><td>gpt-4</td><td>8k</td></tr>
+        <tr><td>claude</td><td>200k</td></tr>
+      </tbody>
+    </table>
+    <div><code>castmd --flag</code></div>
+    <h2>Notes</h2>
+    <p>Exports land as .md files, or as .json when the mode says so.</p>
+    <p>Closing paragraph so the container passes the content-length check comfortably.</p>
+  </article>
+
+  <aside class="sidebar"><p>Sidebar text that must be skipped even though it is long enough to score.</p></aside>
+  <footer role="contentinfo"><p>Footer text that must be skipped as well.</p></footer>
+</body>
+</html>

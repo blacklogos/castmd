@@ -2,12 +2,16 @@
   "name": "castmd",
   "private": true,
   "version": "1.4.0",
-  "description": "Chrome extension — auto-tests for pure lib modules. The extension itself has no build step; this package.json exists only to run node:test against lib/.",
+  "description": "Chrome extension — test harness only. The extension itself has no build step; this package.json exists to run node:test against lib/ and the Chrome-driven e2e suite.",
   "type": "module",
   "scripts": {
-    "test": "node --test 'tests/*.test.js'"
+    "test": "node --test 'tests/*.test.js'",
+    "test:e2e": "node --test --test-concurrency=2 'tests/e2e/*.e2e.js'",
+    "test:all": "npm test && npm run test:e2e"
   },
   "devDependencies": {
-    "linkedom": "^0.18.5"
+    "@puppeteer/browsers": "^2.13.2",
+    "linkedom": "^0.18.5",
+    "puppeteer-core": "^24.43.1"
   }
 }
