@@ -132,6 +132,56 @@ test('htmlStringToMarkdown — inline code inside a paragraph is not emitted twi
   assert.equal(md, 'use `npm test` now\n\n## Next\n\n');
 });
 
+test('htmlStringToMarkdown — inline code inside a heading is not emitted twice', () => {
+  const md = htmlStringToMarkdown('<h2>Use <code>flag</code> now</h2>');
+  assert.equal(md, '## Use flag now\n\n');
+});
+
+test('htmlStringToMarkdown — a block inside a heading or cell is not emitted twice', () => {
+  const md = htmlStringToMarkdown('<table><tr><th>H</th></tr><tr><td><h3>Sub</h3>text</td></tr></table>');
+  assert.equal(md, '\n| H |\n| --- |\n| Subtext |\n\n');
+});
+
+test('htmlStringToMarkdown — a nested table does not fold into the outer one', () => {
+  const html = '<table><tr><th>H</th></tr><tr><td><table><tr><td>inner</td></tr></table></td></tr></table>';
+  assert.equal(htmlStringToMarkdown(html), '\n| H |\n| --- |\n| inner |\n\n');
+});
+
+// ── blocks nested in a list item ────────────────────────────────────────────
+// handleLists renders item text inline and recurses into direct child lists.
+// Anything else it does not render (a <pre>, a <table>, a list behind a <div>)
+// has to survive as its own block instead of being flattened or dropped.
+
+test('htmlStringToMarkdown — <pre> inside <li> keeps its fence', () => {
+  const md = htmlStringToMarkdown('<ul><li>run this<pre><code class="language-sh">npm test</code></pre></li></ul>');
+  assert.equal(md, '- run this\n\n```sh\nnpm test\n```\n\n');
+});
+
+test('htmlStringToMarkdown — <table> inside <li> keeps its rows', () => {
+  const md = htmlStringToMarkdown('<ul><li>see<table><tr><th>A</th></tr><tr><td>1</td></tr></table></li></ul>');
+  assert.equal(md, '- see\n\n\n| A |\n| --- |\n| 1 |\n\n');
+});
+
+test('htmlStringToMarkdown — <li> with both <p> and <pre> renders each once', () => {
+  const md = htmlStringToMarkdown('<ul><li><p>lead</p><pre><code>cmd</code></pre></li></ul>');
+  assert.equal(md, '- lead\n\n```\ncmd\n```\n\n');
+});
+
+test('htmlStringToMarkdown — a list behind a <div> inside <li> is not dropped', () => {
+  const md = htmlStringToMarkdown('<ul><li>a<div><ul><li>b</li></ul></div></li></ul>');
+  assert.equal(md, '- a\n\n- b\n\n', 'nesting is lost, but the item must not vanish');
+});
+
+test('htmlStringToMarkdown — a list hanging straight off a list is not dropped', () => {
+  // Malformed, but browsers keep it in the DOM.
+  assert.equal(htmlStringToMarkdown('<ul><ul><li>x</li></ul></ul>'), '\n- x\n\n');
+});
+
+test('htmlStringToMarkdown — a literal NUL is not read as a hard break', () => {
+  const md = htmlStringToMarkdown('<p>a\u0000b</p>');
+  assert.equal(md, 'a\u0000b\n\n');
+});
+
 test('htmlStringToMarkdown — nested list renders once, indented', () => {
   const md = htmlStringToMarkdown('<ul><li>outer<ul><li>inner</li></ul></li></ul>');
   assert.equal(md, '- outer\n  - inner\n\n');

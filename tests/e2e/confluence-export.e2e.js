@@ -6,7 +6,7 @@
 // confluence-stub.js): real HTTP, real fetch/credentials path, real JSZip, real
 // download. Only the Atlassian server is fake.
 
-import { test, before, after } from 'node:test';
+import { test, before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { buildTestExtension } from './helpers/test-build.js';
@@ -24,6 +24,20 @@ before(async () => {
 after(async () => {
   await chrome?.close();
   build?.cleanup();
+});
+
+// Every export here downloads "Root.zip". Without a clean directory,
+// waitForDownload can match the previous test's file before Chrome has
+// overwritten it, and the assertions then read stale entries.
+beforeEach(() => {
+  for (const name of fs.readdirSync(chrome.downloadDir)) {
+    fs.rmSync(`${chrome.downloadDir}/${name}`, { recursive: true, force: true });
+  }
+});
+
+afterEach(async () => {
+  const pages = await chrome.browser.pages();
+  for (const page of pages.slice(1)) await page.close().catch(() => {});
 });
 
 const clickInPopup = (popup, sel) => popup.evaluate(s => document.querySelector(s).click(), sel);
@@ -143,7 +157,7 @@ test('depth 0 exports only the page itself', async () => {
 
   await clickInPopup(popup, '#confluenceDownloadBtn');
   await waitForStatus(popup, /^Exported 1 pages$/);
-  const zip = await readZip(await waitForDownload(chrome.downloadDir, /^Root(?: \(\d+\))?\.zip$/));
+  const zip = await readZip(await waitForDownload(chrome.downloadDir, 'Root.zip'));
   assert.deepEqual(Object.keys(zip), ['Root.md']);
   assert.deepEqual(errors, []);
 
