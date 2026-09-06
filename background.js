@@ -48,6 +48,9 @@ function showBadge(tabId, text, color) {
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  // `tab` is optional in the API: a click from a surface without a tab (e.g. a
+  // detached devtools window) would otherwise throw inside the listener.
+  if (!tab?.id) return;
   convertAndCopyViaBackground(tab.id, 'convert');
 });
 
