@@ -43,6 +43,14 @@ test('parseUrl — whiteboard / unsupported content type returns null', () => {
   assert.equal(parseUrl('https://acme.atlassian.net/wiki/spaces/X/whiteboard/123'), null);
 });
 
+test('parseUrl — cleartext http tenant returns null', () => {
+  assert.equal(parseUrl('http://acme.atlassian.net/wiki/spaces/X/pages/1/T'), null);
+});
+
+test('parseUrl — lookalike host outside atlassian.net returns null', () => {
+  assert.equal(parseUrl('https://acme.atlassian.net.evil.test/wiki/spaces/X/pages/1/T'), null);
+});
+
 test('parseUrl — invalid input returns null', () => {
   assert.equal(parseUrl(''), null);
   assert.equal(parseUrl('not a url'), null);
