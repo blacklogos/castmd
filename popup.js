@@ -1,4 +1,4 @@
-// Current output mode: 'md' or 'json'
+// Current output mode: 'md', 'json' or 'xml'
 let currentMode = 'md';
 // Last converted content for preview/re-save
 let lastContent = null;
