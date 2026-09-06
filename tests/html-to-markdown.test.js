@@ -33,6 +33,16 @@ test('sanitizeTitle — empty/whitespace/null becomes "untitled"', () => {
   assert.equal(sanitizeTitle(undefined), 'untitled');
 });
 
+test('sanitizeTitle — a page title cannot escape its ZIP directory', () => {
+  // Titles become ZIP entry paths, so a traversal-shaped title must not keep
+  // its separators or its trailing dots.
+  assert.equal(sanitizeTitle('../../etc/passwd'), '..-..-etc-passwd');
+  assert.equal(sanitizeTitle('..\\..\\win.ini'), '..-..-win.ini');
+  assert.equal(sanitizeTitle('..'), 'untitled');
+  assert.equal(sanitizeTitle('.'), 'untitled');
+  assert.equal(sanitizeTitle('/'), '-');
+});
+
 // ── cleanText ───────────────────────────────────────────────────────────────
 
 test('cleanText — collapses whitespace', () => {
@@ -45,6 +55,20 @@ test('cleanText — escapes backticks', () => {
 
 test('cleanText — strips space-before-punctuation', () => {
   assert.equal(cleanText('Hello , world !'), 'Hello, world!');
+});
+
+test('cleanText — a leading-dot word keeps its space', () => {
+  // "editing .zip files" must not become "editing.zip files".
+  assert.equal(cleanText('editing .zip files'), 'editing .zip files');
+  assert.equal(cleanText('save as .md now'), 'save as .md now');
+  assert.equal(cleanText('end of sentence .'), 'end of sentence.');
+});
+
+test('htmlStringToMarkdown — a standalone <code> ends its own line', () => {
+  // Chrome's own docs put bare <code> chips between headings; emitted inline,
+  // the chip pushes the next heading off the start of its line.
+  const md = htmlStringToMarkdown('<div><code>scripting</code></div><h2>Availability</h2>');
+  assert.equal(md, '`scripting`\n\n## Availability\n\n');
 });
 
 // ── htmlStringToMarkdown — block elements ───────────────────────────────────
@@ -93,12 +117,34 @@ test('htmlStringToMarkdown — bold + italic + code + strikethrough + link', () 
   assert.match(md, /\[a link\]\(https:\/\/x\.test\)/);
 });
 
-test('htmlStringToMarkdown — <br> emits a line break inside paragraph', () => {
-  // Current behavior: P handler collapses runs of spaces, so the hard-break
-  // (two-space + newline) reduces to one-space + newline. Pinning that here —
-  // change this test deliberately if the P normalization is ever relaxed.
+test('htmlStringToMarkdown — <br> emits a Markdown hard break', () => {
   const md = htmlStringToMarkdown('<p>line1<br>line2</p>');
-  assert.match(md, /line1[ ]?\nline2/);
+  assert.match(md, /line1 {2}\nline2/, 'a hard break needs both trailing spaces to survive');
+});
+
+test('htmlStringToMarkdown — source line wrapping collapses to one line', () => {
+  const md = htmlStringToMarkdown('<p>first half\n    second half with <strong>bold</strong>\n    and a tail.</p>');
+  assert.equal(md, 'first half second half with **bold** and a tail.\n\n');
+});
+
+test('htmlStringToMarkdown — inline code inside a paragraph is not emitted twice', () => {
+  const md = htmlStringToMarkdown('<p>use <code>npm test</code> now</p><h2>Next</h2>');
+  assert.equal(md, 'use `npm test` now\n\n## Next\n\n');
+});
+
+test('htmlStringToMarkdown — nested list renders once, indented', () => {
+  const md = htmlStringToMarkdown('<ul><li>outer<ul><li>inner</li></ul></li></ul>');
+  assert.equal(md, '- outer\n  - inner\n\n');
+});
+
+test('htmlStringToMarkdown — <p> inside <li> is not emitted twice', () => {
+  const md = htmlStringToMarkdown('<ul><li><p>wrapped item</p></li></ul>');
+  assert.equal(md, '- wrapped item\n\n');
+});
+
+test('htmlStringToMarkdown — table cells are not re-emitted as blocks', () => {
+  const md = htmlStringToMarkdown('<table><tr><th>H</th></tr><tr><td><p>cell</p></td></tr></table>');
+  assert.equal(md, '\n| H |\n| --- |\n| cell |\n\n');
 });
 
 // ── htmlStringToMarkdown — code blocks ──────────────────────────────────────

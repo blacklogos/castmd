@@ -30,13 +30,6 @@ if (window.__castmdVersion !== CONTENT_VERSION) {
           tokens: estimateTokens(markdown)
         });
 
-      } else if (request.action === 'convertAndCopy') {
-        // Popup keyboard shortcut path — content script writes clipboard directly
-        const markdown = convertToMarkdown();
-        writeToClipboard(markdown).then(() =>
-          sendResponse({ success: true, tokens: estimateTokens(markdown) })
-        );
-        return true;
       }
     } catch (error) {
       sendResponse({ success: false, error: error.message });
@@ -45,22 +38,32 @@ if (window.__castmdVersion !== CONTENT_VERSION) {
   });
 }
 
-async function writeToClipboard(text) {
-  await navigator.clipboard.writeText(text);
-}
-
 function estimateTokens(text) {
   return Math.ceil(text.length / 4);
 }
 
 // ── Conversion entry points ────────────────────────────────────────────────
 
+// The element query is flat, so a block that is already rendered by an
+// ancestor (inline code inside a <p>, a nested <ul>, a <p> inside an <li>)
+// would otherwise be emitted a second time — and a duplicate landing mid-line
+// also breaks the next heading. BLOCK_CONTAINERS lists the elements whose own
+// converter already walks their subtree.
+const BLOCK_SELECTOR = 'h1,h2,h3,h4,h5,h6,p,ul,ol,pre,code,table';
+const BLOCK_CONTAINERS = 'p,li,ul,ol,pre,table';
+
+function isRenderedByAncestor(el, root) {
+  const owner = el.parentElement && el.parentElement.closest(BLOCK_CONTAINERS);
+  return !!owner && root.contains(owner);
+}
+
 function convertToMarkdown() {
   const root = findMainContent();
   const pageTitle = findPageTitle();
   let markdown = pageTitle ? `# ${cleanText(pageTitle)}\n\n` : '';
 
-  root.querySelectorAll('h1,h2,h3,h4,h5,h6,p,ul,ol,pre,code,table').forEach(el => {
+  root.querySelectorAll(BLOCK_SELECTOR).forEach(el => {
+    if (isRenderedByAncestor(el, root)) return;
     if (!shouldSkipElement(el)) markdown += getMarkdownForElement(el, pageTitle);
   });
 
@@ -105,9 +108,28 @@ function inlineNodesToMarkdown(node) {
   return out;
 }
 
+// HTML wraps text at arbitrary columns; Markdown treats a bare newline inside a
+// paragraph as part of the same line, but leading indentation from the source
+// leaks through as stray spaces and 4+ spaces would start a code block. Collapse
+// every run of whitespace, keeping only the two-space hard breaks that <br>
+// produced.
+function collapseInlineWhitespace(text) {
+  const HARD_BREAK = '\u0000';
+  return text
+    .replace(/ {2,}\n/g, HARD_BREAK)
+    .replace(/\s+/g, ' ')
+    .replace(/ ?\u0000 ?/g, '  \n')
+    .trim()
+    .replace(/[ \t]+([.,!?;:])(?=\s|$)/g, '$1');
+}
+
 function getMarkdownForElement(element, pageTitle) {
   if (element.tagName === 'CODE') {
-    return element.parentElement?.tagName === 'PRE' ? '' : ` \`${cleanText(element.textContent)}\` `;
+    // Only reached for a <code> that no paragraph, list item or table cell
+    // owns. It still has to end the line: emitted inline, it would run into the
+    // next block and push a heading off the start of its line.
+    const code = cleanText(element.textContent);
+    return code ? `\`${code}\`\n\n` : '';
   }
   if (element.tagName === 'PRE') return handleCodeBlock(element);
   if (element.tagName === 'TABLE') return handleTable(element);
@@ -123,7 +145,7 @@ function getMarkdownForElement(element, pageTitle) {
     case 'H5': return `##### ${text}\n\n`;
     case 'H6': return `###### ${text}\n\n`;
     case 'P': {
-      const inline = inlineNodesToMarkdown(element).trim().replace(/[ \t]+/g, ' ').replace(/[ \t]+([.,!?;:])/g, '$1');
+      const inline = collapseInlineWhitespace(inlineNodesToMarkdown(element));
       return inline ? `${inline}\n\n` : '';
     }
     case 'UL': return handleLists(element, false, 0) + '\n';
@@ -185,7 +207,7 @@ function handleLists(element, ordered, level) {
       else if (n.nodeType === Node.ELEMENT_NODE && !['UL','OL'].includes(n.tagName))
         text += inlineNodesToMarkdown(n);
     }
-    text = text.trim().replace(/[ \t]+/g, ' ').replace(/[ \t]+([.,!?;:])/g, '$1');
+    text = collapseInlineWhitespace(text);
     md += `${indent}${ordered ? `${i + 1}.` : '-'} ${text}\n`;
     item.querySelectorAll(':scope > ul, :scope > ol').forEach(nested => {
       md += handleLists(nested, nested.tagName === 'OL', level + 1);
@@ -274,25 +296,9 @@ function cleanText(text) {
     .replace(/\s+/g, ' ')
     .replace(/[\r\n]+/g, ' ')
     .replace(/`/g, '\\`')
-    .replace(/\s+([.,!?;:])/g, '$1')
+    // Only sentence punctuation: a lookahead keeps " .zip" and " .md" intact.
+    .replace(/\s+([.,!?;:])(?=\s|$)/g, '$1')
     .replace(/\s+$/, '');
-}
-
-function sanitizeFileName(url) {
-  try {
-    const { pathname, hostname } = new URL(url);
-    let slug = pathname.split('/').filter(Boolean).pop() || hostname;
-    slug = decodeURIComponent(slug)
-      .toLowerCase()
-      .replace(/\.[a-z]{2,4}$/i, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/-{2,}/g, '-')
-      .replace(/^-+|-+$/g, '');
-    if (slug.length > 35) slug = slug.substring(0, 35).replace(/-+$/, '');
-    return slug || hostname;
-  } catch {
-    return 'page-content';
-  }
 }
 
 })();
