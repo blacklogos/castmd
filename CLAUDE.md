@@ -13,7 +13,20 @@ A Chrome Extension (Manifest V3) that converts webpage HTML to Markdown, extract
 3. Click "Load unpacked" → select this directory
 4. After code changes, click the reload icon on the extension card
 
-Pure lib modules (`lib/html-to-markdown.js`, `lib/confluence-api.js`) have a node-based test suite. Run with `npm install && npm test` (devDep: `linkedom` for DOM). End-to-end verification (popup UI, content script, background worker, real Confluence calls) is still manual in the browser.
+Two automated suites, both `node:test`, no build step:
+
+- `npm test` — pure lib modules (`lib/*.js`) under Node, real DOM via `linkedom`.
+- `npm run test:e2e` — the extension loaded unpacked into Chrome for Testing and
+  driven with puppeteer: popup UI, content script injection, service worker,
+  the local `.md` viewer/editor on real `file://` pages, and the Confluence
+  export against a stubbed tenant (real fetch, real JSZip, real download).
+  Chrome for Testing is downloaded once into `~/.cache/puppeteer` on first run;
+  `CHROME_PATH` overrides it, `CASTMD_E2E_HEADED=1` shows the window. Branded
+  Google Chrome cannot be used — it ignores `--load-extension`.
+
+`npm run test:all` runs both. Details and the one deliberate deviation from the
+shipped artifact (host permissions, see `tests/e2e/helpers/test-build.js`) are
+documented in that helper.
 
 ## Architecture
 
@@ -21,8 +34,7 @@ Pure lib modules (`lib/html-to-markdown.js`, `lib/confluence-api.js`) have a nod
 manifest.json              Extension config (MV3, permissions, entry points)
 popup.html/js              Extension popup UI — orchestrates all user actions
 content.js                 Injected into every page — core conversion logic
-background.js              Service worker — handles URL analysis via temp tabs
-outline.html/js            Standalone page for extracting outlines from pasted MD
+background.js              Service worker — context menu, keyboard shortcut, badge
 md-viewer.js/css           Content script — renders local file:// *.md files as HTML
 lib/markdown-to-html.js    Pure MD→HTML renderer (used by md-viewer.js)
 lib/html-to-markdown.js    Pure HTML→MD conversion (used by Confluence flow)
@@ -35,20 +47,19 @@ vendor/jszip.min.js        Vendored JSZip 3.10.1 (MV3 CSP forbids remote scripts
 ### Message Flow
 
 ```
-popup.js  ──(chrome.tabs.sendMessage)──►  content.js   (convert, getOutline, getPageTitle)
-popup.js  ──(chrome.runtime.sendMessage)──►  background.js  (analyzeUrl)
-background.js  ──(scripting.executeScript)──►  extractContent() runs in temp tab
+popup.js       ──(chrome.tabs.sendMessage)──►      content.js  (convert, getOutline, getPageMeta)
+background.js  ──(chrome.scripting.executeScript)─► content.js  then a clipboard write in the page
 ```
 
 ### Key Design Decisions
 
 - **Content detection** (`findMainContent`): tries semantic HTML selectors in priority order (`main`, `article`, `[role="main"]`, etc.), falls back to content-density analysis (text length minus link text, divided by element count).
-- **`shouldSkipElement`**: filters out nav/header/footer/sidebar elements. This logic is **intentionally duplicated** in both `content.js` and inside `background.js`'s `extractContent` function — the latter runs via `scripting.executeScript` in a separate tab context where it can't reference outer scope.
-- **Filename sanitization** (`sanitizeFileName` in `content.js`): uses the URL pathname slug, falls back to hostname, caps at 35 chars.
-- **Theme persistence**: stored in `chrome.storage.local` under key `theme`. Vampire theme (Easter egg) stored separately under `vampireTheme`, triggered by 5 rapid clicks on `.credits`.
+- **`shouldSkipElement`**: filters out nav/header/footer/sidebar elements, and anything computed-invisible. Only `content.js` has it — the background worker injects `content.js` as a file rather than a serialized function, so nothing needs to be duplicated for `executeScript` any more.
+- **Flat block pass**: `convertToMarkdown` (and `elementToMarkdown` in the lib) query all block tags at once, then skip any node whose parent chain hits `p,li,ul,ol,pre,table` — the owning converter already walked it. Without that check, inline `<code>` in a paragraph, a nested `<ul>`, and `<li><p>` each render twice, and the duplicate lands mid-line where it breaks the following heading.
+- **Filenames** are the popup's job (`slugifyUrl` in `popup.js` for downloads, `HtmlToMarkdown.sanitizeTitle` for ZIP entries). `sanitizeTitle` also has to be traversal-safe: titles become ZIP paths.
 - **Confluence tree export** (`lib/confluence-*.js`): runs entirely in popup context. Discovers page tree via Confluence Cloud v2 children API (paginated, BFS, hard cap 100), fetches rendered HTML bodies (`body-format=export_view`) at concurrency 3 with 429 backoff, converts via `lib/html-to-markdown.js`, packages into a ZIP via vendored JSZip, downloads via `<a download>`. MV3 service worker is **not** used — popup-bound execution avoids worker idle-kill on multi-minute jobs. Permission for `https://{tenant}.atlassian.net/*` is requested on-demand at preview time.
 - **Local .md viewer + editor** (`md-viewer.js` + `lib/markdown-to-html.js`): declared content script on `file:///*` with markdown-extension globs, run with `"world": "MAIN"` (not the default isolated world) — its Save button needs `showSaveFilePicker`, which is not exposed to isolated-world content scripts, and relaying the call through `background.js` would lose the transient user activation the picker requires. Both files must stay free of `chrome.*` API calls or the MAIN-world script silently loses access to them. Only activates on Chrome's plain-text viewer layout (body with a single `<pre>`), hides the raw `<pre>` (kept in DOM, and kept in sync after a save), and inserts a rendered `<article class="castmd-viewer">`. The renderer escapes all raw HTML (file:// pages share an origin, so passthrough would be XSS) and neutralizes `javascript:`/`data:` URLs. Requires the user to enable "Allow access to file URLs" in `chrome://extensions`; without it Chrome never injects the script. A leading YAML frontmatter block is stripped before rendering (`lib/markdown-to-html.js`'s `stripFrontmatter`), but the editor textarea is always seeded from the raw source, frontmatter included, so saving never drops it. Edit swaps the rendered article for a textarea holding the raw source; Save writes it back via `showSaveFilePicker` → `createWritable()`, keeping the resulting `FileSystemFileHandle` in a module-scope variable for the page load so later saves skip the picker. No handle persistence across reloads and no conflict detection against external changes to the file — both deliberately deferred, not bugs.
-- **Pure conversion module** (`lib/html-to-markdown.js`): exposes `HtmlToMarkdown.htmlStringToMarkdown(html, {pageTitle})`. Intentionally duplicates pure block-converter functions from `content.js` rather than refactoring the content script (refactor risk not worth it for this feature). Adds `sanitizeTitle` which is more permissive than `content.js`'s `sanitizeFileName` — preserves spaces/case for human-readable filenames inside the ZIP.
+- **Pure conversion module** (`lib/html-to-markdown.js`): exposes `HtmlToMarkdown.htmlStringToMarkdown(html, {pageTitle})`. Intentionally duplicates pure block-converter functions from `content.js` rather than refactoring the content script (refactor risk not worth it for this feature). Adds `sanitizeTitle`, which preserves spaces and case for human-readable filenames inside the ZIP.
 
 ### Permissions Used
 
@@ -56,4 +67,4 @@ background.js  ──(scripting.executeScript)──►  extractContent() runs i
 
 ## Known Duplicated Code
 
-`findMainContent`, `isValidContentContainer`, `findContentByDensity`, `shouldSkipElement`, `findPageTitle`, `cleanText` exist in `content.js` (top-level). `content.js` and `background.js` historically also duplicated these via `scripting.executeScript` (serialization constraint — only self-contained functions can be injected). Additionally, `inlineNodesToMarkdown`, `getMarkdownForElement`, `handleCodeBlock`, `detectLanguage`, `handleTable`, `handleLists`, `cleanText` are duplicated in `lib/html-to-markdown.js` so the popup can convert HTML fetched over the network (no live page DOM). Refactoring `content.js` to import the shared module is deferred — would require switching content script to ES modules and dynamic import.
+`inlineNodesToMarkdown`, `getMarkdownForElement`, `handleCodeBlock`, `detectLanguage`, `handleTable`, `handleLists`, `collapseInlineWhitespace`, `cleanText`, and the `isRenderedByAncestor` block-ownership check exist in both `content.js` (live page DOM) and `lib/html-to-markdown.js` (HTML fetched over the network, no live page). **A conversion fix in one must be applied to the other**; every conversion bug found so far existed in both copies. Refactoring `content.js` to import the shared module is deferred — it would require switching the content script to ES modules and dynamic import.

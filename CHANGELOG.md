@@ -1,3 +1,20 @@
+## Unreleased
+
+### Bug fixes
+- Page conversion emitted duplicate content: inline `<code>` inside a paragraph, a nested `<ul>`/`<ol>`, and `<p>` wrapped inside an `<li>` were each rendered twice — once by the block that owns them and once by the flat element pass. The stray copy also landed mid-line, so the heading that followed it stopped being a heading. Blocks already rendered by an ancestor are now skipped (`content.js` and `lib/html-to-markdown.js`, both affected the page flows and the Confluence export)
+- Paragraphs kept the source HTML's line wrapping, so a paragraph broken across source lines came out with hard newlines and leading spaces (4+ spaces of indentation would even open a code block). Whitespace runs now collapse to one space
+- `<br>` no longer loses its Markdown hard break: the two trailing spaces used to be collapsed to one, which renders as a plain space
+- Confluence export progress bar stopped short of 100% whenever a page was skipped (403 or fetch error), leaving a finished export looking hung. Progress now counts attempts
+- Context menu handler no longer throws when Chrome reports a click without a tab
+- `parseUrl` rejects `http://` tenants, so the popup can no longer ask for host permission on a cleartext origin
+
+### Tests
+- New e2e suite: the extension is loaded unpacked into Chrome for Testing and driven with puppeteer — popup init and error paths, content-script injection and re-injection, markdown/JSON/XML downloads, all-tabs fan-out, the service worker clipboard path, the local `.md` viewer/editor including a hostile-input XSS check, and the full Confluence export against a stubbed tenant (real fetch, real JSZip, real ZIP download). `npm run test:e2e`, `npm run test:all`
+- Unit suite grew to 93 cases: block-duplication regressions, source-wrapping collapse, hard breaks, ZIP-path traversal in `sanitizeTitle`, https-only tenant parsing
+
+### Cleanup
+- Removed dead code from `content.js`: the unused `convertAndCopy` message branch, its `writeToClipboard` helper, and `sanitizeFileName` (filenames are the popup's job). Every action re-injects this file into the page, so the trim is on the hot path
+
 ## v1.4.0 — 2026-08-17
 
 ### New features

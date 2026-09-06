@@ -71,9 +71,29 @@ chore: bump dev dependencies
 release: v1.1.0 — short summary
 ```
 
-### 4. Verify manually
+### 4. Run the tests
 
-There is no automated test suite. Before opening a PR, verify your change in the browser:
+```bash
+npm install
+npm run test:all      # lib unit tests + Chrome-driven e2e
+```
+
+- `npm test` covers the pure modules in `lib/` under Node.
+- `npm run test:e2e` loads the extension into Chrome for Testing and drives it
+  with puppeteer: popup, content script injection, service worker, the local
+  `.md` viewer/editor, and the Confluence export against a stubbed tenant.
+  The browser is downloaded once into `~/.cache/puppeteer`; `CHROME_PATH`
+  points at your own binary and `CASTMD_E2E_HEADED=1` shows the window.
+  Branded Google Chrome will not work — it ignores `--load-extension`.
+
+A conversion change belongs in both `content.js` and `lib/html-to-markdown.js`
+(see "Known Duplicated Code" in `CLAUDE.md`); add a case to
+`tests/html-to-markdown.test.js` and, when the fix depends on a live page, to
+`tests/e2e/fixtures/article.html`.
+
+### 5. Verify in the browser
+
+Automated coverage does not replace a look at the real thing:
 
 - Reload the extension at `chrome://extensions/`
 - Open a fresh tab on a page representative of the change
@@ -83,7 +103,7 @@ There is no automated test suite. Before opening a PR, verify your change in the
 
 If you fix a content-detection bug, mention the specific URL(s) you verified against in the PR description so reviewers can spot-check.
 
-### 5. Open a pull request
+### 6. Open a pull request
 
 ```bash
 git push origin feat/your-feature
@@ -92,6 +112,7 @@ gh pr create --title "feat: short description" --body "Closes #N"
 
 **PR checklist:**
 
+- [ ] `npm run test:all` passes
 - [ ] Verified manually in Chrome on the affected site(s)
 - [ ] No console errors in popup or content script
 - [ ] Commit messages follow Conventional Commits
