@@ -46,6 +46,11 @@ export async function launchWithExtension(extensionDir) {
     executablePath,
     headless: !process.env.CASTMD_E2E_HEADED,
     ignoreDefaultArgs: ['--disable-extensions'],
+    // Explicit, well under node:test's own patience: a stalled launch or a lost
+    // browser then fails with a named timeout instead of hanging and taking the
+    // rest of the file down with it.
+    timeout: 60_000,
+    protocolTimeout: 60_000,
     args: [
       `--disable-extensions-except=${extensionDir}`,
       `--load-extension=${extensionDir}`,
@@ -54,6 +59,10 @@ export async function launchWithExtension(extensionDir) {
       '--no-default-browser-check',
       '--window-size=1280,900',
     ],
+  });
+
+  browser.on('disconnected', () => {
+    process.stderr.write('e2e: browser disconnected — remaining assertions in this file will fail\n');
   });
 
   const swTarget = await browser.waitForTarget(
