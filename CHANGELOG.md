@@ -1,4 +1,4 @@
-## Unreleased
+## v1.5.0 — 2026-09-07
 
 ### Bug fixes
 - Page conversion emitted duplicate content: inline `<code>` inside a paragraph or a heading, a nested `<ul>`/`<ol>`, and `<p>` wrapped inside an `<li>` were each rendered twice — once by the block that owns them and once by the flat element pass. The stray copy also landed mid-line, so the heading that followed it stopped being a heading. Ancestor ownership is now explicit: `pre`/`table` cover their whole subtree, `p`/`li`/`h1`–`h6` cover inline descendants only (`content.js` and `lib/html-to-markdown.js`, so both the page flows and the Confluence export)
