@@ -1,0 +1,6 @@
+# castmd.cc4.marketing: all search engines and AI assistants welcome
+User-agent: *
+Allow: /
+
+Sitemap: https://castmd.cc4.marketing/sitemap.xml
+# LLM summary: https://castmd.cc4.marketing/llms.txt

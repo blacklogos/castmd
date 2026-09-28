@@ -1,0 +1,65 @@
+# castmd
+
+> Chrome extension that converts any webpage to clean Markdown for LLM workflows. One click → clipboard-ready MD, JSON, or Claude XML. Token-aware. Free and open source.
+
+castmd is a free tool published by CC4.Marketing (https://cc4.marketing/), the free Claude Code course for marketers.
+
+## Pages
+
+- [castmd](https://castmd.cc4.marketing/)
+
+## FAQ
+
+### What does castmd do?
+
+castmd is a Chrome extension that converts any webpage to clean Markdown, JSON, or Claude XML for use with large language models. It strips navigation, sidebars, and footers and preserves inline formatting like bold, italic, links, and inline code.
+
+### Does castmd send my data anywhere?
+
+No. castmd runs entirely in your browser. There is no server, and the extension has no analytics or tracking. Conversion happens in a content script injected into the active tab. The Confluence export feature talks only to your own Atlassian site using your existing browser session — nothing else leaves your machine. This website only counts anonymous page views, with no cookies.
+
+### How do I save every open tab as Markdown files?
+
+Open the castmd popup and click 'Save all tabs as .md'. castmd injects its content script into every tab in the current window, converts each page, and downloads each one as a separate file. Filenames are derived from the URL slug, and collisions are auto-deduped with -2, -3 suffixes. Use the MD/JSON/XML toggle to choose the export format.
+
+### Can castmd export a whole Confluence space or page tree?
+
+Yes. castmd v1.2.0 added Confluence Cloud tree export. Open the popup on any Confluence Cloud page, choose a depth (this page, + children, or + all descendants), preview the page count, and download a ZIP of Markdown files mirroring the page hierarchy. Exports are capped at 100 pages; inaccessible pages are skipped and listed in _skipped.txt. Host permission is requested on demand for your Atlassian tenant only.
+
+### How does the all-tabs export work?
+
+castmd offers two all-tabs modes. 'Copy all tabs' merges every open tab into a single Markdown session document, separated by horizontal rules and page titles, written to your clipboard. 'Save all tabs' downloads each tab as its own file. Both work across the current window only.
+
+### What output formats does castmd support?
+
+castmd supports three output modes: Markdown for general LLM use, JSON for programmatic ingestion (includes URL, title, markdown, token count, and timestamp), and Claude XML which wraps the page in Anthropic's  tag format used by Claude's structured prompting API.
+
+### Does castmd work on every.to, Substack, and other modern publication sites?
+
+Yes. castmd v1.1.0 added detection for the schema.org articleBody microdata used by every.to, news sites, and many editorial platforms, plus density-based fallback detection that handles single-page-app sites without semantic HTML. If a site fails to extract correctly, open an issue on GitHub with the URL.
+
+### How are tokens counted in castmd?
+
+castmd estimates tokens as ceil(characters / 4), a good approximation for English-language LLM tokenizers. After every conversion it compares the result to known model context limits: gpt-4 (8K), gpt-4o (128K), Claude (200K), and Gemini (1M). Models that fit show as green chips; over-limit models are greyed out.
+
+### What keyboard shortcut does castmd use?
+
+Press Ctrl+Shift+M on Windows or Linux, or Cmd+Shift+M on Mac, to copy the current page as Markdown to the clipboard. You can also right-click any page and choose 'Copy page as Markdown' from the context menu.
+
+### Is castmd free and open source?
+
+Yes. castmd is free and open source under the project's repository at github.com/blacklogos/castmd. There is no paid tier and no account required. Install it directly from the source by loading the unpacked extension in chrome://extensions/.
+
+### Can castmd render local Markdown files in the browser?
+
+Yes. castmd v1.3.0 added a local .md viewer: open a file:// URL ending in .md and it renders as formatted HTML with headings, fenced code blocks, tables, task lists, and automatic dark mode. Enable 'Allow access to file URLs' on the castmd card in chrome://extensions/ first; Chrome blocks extensions from file:// pages without it. The raw source is kept intact behind the rendered view, and all HTML in the file is escaped for safety.
+
+### What should I do if castmd misses the article content on a page?
+
+First reload the extension at chrome://extensions/ to ensure the latest content script is active, then close and reopen the affected tab so the script injects fresh. If the issue persists, open a GitHub issue at github.com/blacklogos/castmd/issues with the URL, and the maintainers can add site-specific detection rules.
+
+
+## Related
+
+- [CC4.Marketing, free Claude Code course for marketers](https://cc4.marketing/)
+- [All cc4.marketing tools](https://cc4.marketing/llms.txt)

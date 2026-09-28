@@ -28,33 +28,52 @@
   <link rel="canonical" href="https://castmd.cc4.marketing/">
 
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "castmd",
-    "applicationCategory": "BrowserApplication",
-    "operatingSystem": "Chrome",
-    "url": "https://github.com/blacklogos/castmd",
-    "description": "Chrome extension that converts webpages to clean Markdown for LLM workflows. One click → clipboard-ready MD, JSON, or Claude XML. Token-aware.",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "author": { "@type": "Organization", "name": "cc4.marketing", "url": "https://cc4.marketing" },
-    "softwareVersion": "1.5.0",
-    "featureList": [
-      "Webpage to Markdown conversion",
-      "MD, JSON, and Claude XML output modes",
-      "Token count estimation",
-      "Model fit display — gpt-4, gpt-4o, claude, gemini",
-      "All-tabs export — merge into one document",
-      "Save all tabs as separate Markdown files",
-      "Confluence Cloud tree export — page + descendants as ZIP of Markdown",
-      "Local Markdown viewer — renders file:// *.md files as formatted HTML",
-      "Schema.org articleBody detection (every.to, news sites)",
-      "Preview and edit panel",
-      "Right-click context menu",
-      "Keyboard shortcut Ctrl+Shift+M"
-    ],
-    "codeRepository": "https://github.com/blacklogos/castmd"
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "castmd",
+  "applicationCategory": "BrowserApplication",
+  "operatingSystem": "Chrome",
+  "url": "https://github.com/blacklogos/castmd",
+  "description": "Chrome extension that converts webpages to clean Markdown for LLM workflows. One click → clipboard-ready MD, JSON, or Claude XML. Token-aware.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "cc4.marketing",
+    "url": "https://cc4.marketing"
+  },
+  "softwareVersion": "1.5.0",
+  "featureList": [
+    "Webpage to Markdown conversion",
+    "MD, JSON, and Claude XML output modes",
+    "Token count estimation",
+    "Model fit display — gpt-4, gpt-4o, claude, gemini",
+    "All-tabs export — merge into one document",
+    "Save all tabs as separate Markdown files",
+    "Confluence Cloud tree export — page + descendants as ZIP of Markdown",
+    "Local Markdown viewer — renders file:// *.md files as formatted HTML",
+    "Schema.org articleBody detection (every.to, news sites)",
+    "Preview and edit panel",
+    "Right-click context menu",
+    "Keyboard shortcut Ctrl+Shift+M"
+  ],
+  "codeRepository": "https://github.com/blacklogos/castmd",
+  "publisher": {
+    "@type": "Organization",
+    "name": "CC4.Marketing",
+    "url": "https://cc4.marketing/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://cc4.marketing/apple-touch-icon.png",
+      "width": 180,
+      "height": 180
+    }
   }
+}
   </script>
 
   <script type="application/ld+json">
@@ -70,7 +89,7 @@
       {
         "@type": "Question",
         "name": "Does castmd send my data anywhere?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. castmd runs entirely in your browser. There is no server, no analytics, and no tracking. Conversion happens in a content script injected into the active tab. The Confluence export feature talks only to your own Atlassian site using your existing browser session — nothing else leaves your machine." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. castmd runs entirely in your browser. There is no server, and the extension has no analytics or tracking. Conversion happens in a content script injected into the active tab. The Confluence export feature talks only to your own Atlassian site using your existing browser session — nothing else leaves your machine. This website only counts anonymous page views, with no cookies." }
       },
       {
         "@type": "Question",
@@ -843,6 +862,22 @@
       .steps { grid-template-columns: 1fr; }
     }
   </style>
+<!-- cc4-analytics:start -->
+<script>
+  // Cookieless page counts only (first-party ledger). No GA, no Plausible, no cookies.
+  if (location.hostname === 'castmd.cc4.marketing') {
+    var cc4l = document.createElement('script'); cc4l.defer = true;
+    cc4l.setAttribute('data-site', 'castmd.cc4.marketing'); cc4l.src = 'https://s.cc4.marketing/beacon.js';
+    document.head.appendChild(cc4l);
+  }
+</script>
+<!-- cc4-analytics:end -->
+<!-- cc4-og-image:start -->
+<meta property="og:image" content="https://castmd.cc4.marketing/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:image" content="https://castmd.cc4.marketing/og-image.png">
+<!-- cc4-og-image:end -->
 </head>
 <body>
 
@@ -1227,7 +1262,7 @@ Markdown for LLM workflows.
         </details>
         <details class="faq-item">
           <summary>Does castmd send my data anywhere?</summary>
-          <p>No. castmd runs entirely in your browser. No server, no analytics, no tracking. Conversion happens in the content script injected into the active tab. Confluence export talks only to your own Atlassian site, using your existing browser session. Nothing else leaves your machine.</p>
+          <p>No. castmd runs entirely in your browser. No server, and the extension has no analytics or tracking. Conversion happens in the content script injected into the active tab. Confluence export talks only to your own Atlassian site, using your existing browser session. Nothing else leaves your machine. This website only counts anonymous page views, with no cookies.</p>
         </details>
         <details class="faq-item">
           <summary>How does all-tabs export work?</summary>

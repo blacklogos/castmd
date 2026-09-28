@@ -68,3 +68,16 @@ background.js  ──(chrome.scripting.executeScript)─► content.js  then a c
 ## Known Duplicated Code
 
 `inlineNodesToMarkdown`, `getMarkdownForElement`, `handleCodeBlock`, `detectLanguage`, `handleTable`, `handleLists`, `collapseInlineWhitespace`, `cleanText`, and the `isRenderedByAncestor` block-ownership check exist in both `content.js` (live page DOM) and `lib/html-to-markdown.js` (HTML fetched over the network, no live page). **A conversion fix in one must be applied to the other**; every conversion bug found so far existed in both copies. Refactoring `content.js` to import the shared module is deferred — it would require switching the content script to ES modules and dynamic import.
+
+## Landing page (castmd.cc4.marketing)
+
+Pages project `castmd`, direct upload. Deploy only after the matching version is live on the
+Chrome Web Store (the page states `softwareVersion`). Ship `index.html` with `site-seo/`
+(404, robots, sitemap, llms.txt, og-image.png) or the SEO files disappear from production:
+
+    rm -rf /tmp/deploy && mkdir /tmp/deploy && cp index.html site-seo/* /tmp/deploy/
+    npx wrangler pages deploy /tmp/deploy --project-name=castmd --branch=main --commit-dirty=true
+
+Analytics here is cookieless page counts only (`--ledger-only`), because the FAQ promises the
+extension has no tracking. After editing title, description or FAQ JSON-LD, regenerate:
+`python3 ~/Projects/tasks/cc4-seo-subdomains/working/apply-seo-analytics-kit.py castmd.cc4.marketing . --seo-dir site-seo --only-index --ledger-only`
