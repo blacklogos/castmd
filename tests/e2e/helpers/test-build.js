@@ -22,7 +22,7 @@ export const REPO_ROOT = path.resolve(__dirname, '../../..');
 
 // Everything in the repo that is not part of the extension package.
 const NOT_SHIPPED = new Set([
-  '.git', '.gitignore', '.wrangler', 'node_modules', 'tests', 'plans', 'docs',
+  '.git', '.gitignore', '.wrangler', 'node_modules', 'tests', 'plans', 'docs', 'scripts',
   'package.json', 'package-lock.json', 'index.html', 'privacy.html',
   'CLAUDE.md', 'CONTRIBUTING.md', 'CHANGELOG.md', 'README.md', 'PRIVACY.md',
   'dracula.png', '.DS_Store',
