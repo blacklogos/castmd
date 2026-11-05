@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const FIXTURE_DIR = path.resolve(__dirname, '../fixtures');
 
-const TYPES = { '.html': 'text/html', '.md': 'text/markdown', '.css': 'text/css', '.js': 'text/javascript' };
+const TYPES = { '.html': 'text/html', '.md': 'text/markdown', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png' };
 
 export async function startFixtureServer() {
   const server = http.createServer((req, res) => {

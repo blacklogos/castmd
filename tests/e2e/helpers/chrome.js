@@ -113,9 +113,16 @@ export async function waitForDownload(downloadDir, match, timeoutMs = 15_000) {
   const test = typeof match === 'function'
     ? match
     : (name) => (match instanceof RegExp ? match.test(name) : name === match);
+  let lastSize = -1;
   while (Date.now() < deadline) {
     const hit = fs.readdirSync(downloadDir).filter(n => !n.endsWith('.crdownload')).find(test);
-    if (hit) return path.join(downloadDir, hit);
+    // The final name can appear before the bytes are flushed: wait for a
+    // non-empty size that holds across two polls.
+    if (hit) {
+      const size = fs.statSync(path.join(downloadDir, hit)).size;
+      if (size > 0 && size === lastSize) return path.join(downloadDir, hit);
+      lastSize = size;
+    }
     await new Promise(r => setTimeout(r, 100));
   }
   throw new Error(`no download matched ${match} in ${downloadDir} (saw: ${fs.readdirSync(downloadDir).join(', ')})`);
