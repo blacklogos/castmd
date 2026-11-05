@@ -42,6 +42,20 @@ lib/confluence-api.js      Confluence Cloud v2 REST client + tree discovery
 lib/zip-builder.js         Thin wrapper over JSZip
 lib/confluence-export.js   Orchestrator: discover → fetch → convert → ZIP
 vendor/jszip.min.js        Vendored JSZip 3.10.1 (MV3 CSP forbids remote scripts)
+export-capture.js          Injected after content.js: snapshot of main content for export
+export.html/js             Export page: metadata + header/footer form, preview, HTML/PDF/DOCX
+lib/export-sanitize.js     Allowlist sanitizer for captured page HTML
+lib/export-document.js     Metadata block, doc CSS, @page header/footer, standalone .html
+lib/export-images.js       Embeds images as data: URLs; rasterizes SVG/WebP for DOCX
+lib/html-to-docx-body.js   Sanitized HTML → WordprocessingML body (+ -inline.js, -table.js, docx-image-run.js)
+lib/docx-package.js        Full .docx package: styles, numbering, header/footer, core props
+lib/brand-preset.js        Brand file validation, on/off toggles, branded CSS + print margin boxes
+lib/docx-brand-parts.js    Branded DOCX header (logo), footer (contact), embedded obfuscated fonts
+export-brand-controls.js   Export page brand picker: import, remove, export, toggles (chrome.storage.local)
+export-brand-viewer.js     "View style" dialog: logo, swatches, type specimens, header/footer mock
+export-brand-editor.js     New/Edit brand dialog: browse logo + fonts, colors, fields, templates
+lib/brand-asset-readers.js Font family from the TTF name table, logo aspect, slug ids (editor + build script)
+scripts/build-brand-file.mjs  Builds a .castmd-brand.json from a spec + local logo/fonts (not shipped)
 ```
 
 ### Message Flow
@@ -60,10 +74,11 @@ background.js  ──(chrome.scripting.executeScript)─► content.js  then a c
 - **Confluence tree export** (`lib/confluence-*.js`): runs entirely in popup context. Discovers page tree via Confluence Cloud v2 children API (paginated, BFS, hard cap 100), fetches rendered HTML bodies (`body-format=export_view`) at concurrency 3 with 429 backoff, converts via `lib/html-to-markdown.js`, packages into a ZIP via vendored JSZip, downloads via `<a download>`. MV3 service worker is **not** used — popup-bound execution avoids worker idle-kill on multi-minute jobs. Permission for `https://{tenant}.atlassian.net/*` is requested on-demand at preview time.
 - **Local .md viewer + editor** (`md-viewer.js` + `lib/markdown-to-html.js`): declared content script on `file:///*` with markdown-extension globs, run with `"world": "MAIN"` (not the default isolated world) — its Save button needs `showSaveFilePicker`, which is not exposed to isolated-world content scripts, and relaying the call through `background.js` would lose the transient user activation the picker requires. Both files must stay free of `chrome.*` API calls or the MAIN-world script silently loses access to them. Only activates on Chrome's plain-text viewer layout (body with a single `<pre>`), hides the raw `<pre>` (kept in DOM, and kept in sync after a save), and inserts a rendered `<article class="castmd-viewer">`. The renderer escapes all raw HTML (file:// pages share an origin, so passthrough would be XSS) and neutralizes `javascript:`/`data:` URLs. Requires the user to enable "Allow access to file URLs" in `chrome://extensions`; without it Chrome never injects the script. A leading YAML frontmatter block is stripped before rendering (`lib/markdown-to-html.js`'s `stripFrontmatter`), but the editor textarea is always seeded from the raw source, frontmatter included, so saving never drops it. Edit swaps the rendered article for a textarea holding the raw source; Save writes it back via `showSaveFilePicker` → `createWritable()`, keeping the resulting `FileSystemFileHandle` in a module-scope variable for the page load so later saves skip the picker. No handle persistence across reloads and no conflict detection against external changes to the file — both deliberately deferred, not bugs.
 - **Pure conversion module** (`lib/html-to-markdown.js`): exposes `HtmlToMarkdown.htmlStringToMarkdown(html, {pageTitle})`. Intentionally duplicates pure block-converter functions from `content.js` rather than refactoring the content script (refactor risk not worth it for this feature). Adds `sanitizeTitle`, which preserves spaces and case for human-readable filenames inside the ZIP.
+- **Export as HTML / PDF / DOCX**: the popup injects `content.js` + `export-capture.js` and calls `window.__castmdCapture()` (via `executeScript({ func })`), which clones the main content on the live page: drops skipped/hidden nodes and form/media tags, absolutizes links, resolves lazy and srcset images, and turns inline SVG diagrams and canvas charts into `<img>` data URLs (icon-sized SVGs are dropped). The snapshot travels through `chrome.storage.session` (only the latest kept) to `export.html?id=`. The export page re-sanitizes it (`lib/export-sanitize.js`; the capture is untrusted page HTML), embeds images as data URLs, and offers editable metadata plus header/footer templates (`{title} {url} {site} {date} {page} {pages}`). PDF is Chrome's print dialog: `@page` margin boxes carry header, footer and page counters (Chrome 131+). DOCX is hand-written OOXML zipped with the vendored JSZip, no extra library; Word-unsafe image types are rasterized to PNG. Image bytes from CDNs without CORS need `<all_urls>`, requested from the export page only when an image failed, never up front. Brand presets (logo, colors, typefaces, contact fields, each switchable) are never bundled: a brand ships as a `.castmd-brand.json` the user imports once, validated by `BrandPreset.validateBrand` because its values land in CSS and OOXML. Keep brand specs, logos and commercial fonts out of this public repo.
 
 ### Permissions Used
 
-`activeTab`, `scripting`, `clipboardWrite`, `contextMenus`, `tabs`, `optional_host_permissions: <all_urls>`. Host permissions are requested on-demand: `<all_urls>` for the "all tabs" flows, and narrower `https://{tenant}.atlassian.net/*` for Confluence export.
+`activeTab`, `scripting`, `clipboardWrite`, `contextMenus`, `tabs`, `storage` (session handoff to the export page, imported brand presets), `optional_host_permissions: <all_urls>`. Host permissions are requested on-demand: `<all_urls>` for the "all tabs" flows, and narrower `https://{tenant}.atlassian.net/*` for Confluence export.
 
 ## Known Duplicated Code
 

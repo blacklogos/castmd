@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>castmd export</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f3f2f7; color: #111827; font: 13px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+    .layout { display: flex; align-items: flex-start; gap: 24px; padding: 24px; }
+    .panel { position: sticky; top: 24px; width: 320px; flex: none; background: #fff; border: 1px solid #e5e3ee; border-radius: 10px; padding: 16px; max-height: calc(100vh - 48px); overflow: auto; }
+    .logo { font-size: 14px; margin-bottom: 12px; }
+    .logo b { font-weight: 700; } .logo span { color: #7c6af7; font-weight: 600; }
+    fieldset { border: 0; padding: 0; margin: 0 0 14px; }
+    legend { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: 6px; }
+    label { display: block; margin-bottom: 8px; color: #374151; }
+    label.check { display: flex; gap: 6px; align-items: center; }
+    input[type=text], textarea { display: block; width: 100%; margin-top: 3px; padding: 6px 8px; border: 1px solid #d9d6e4; border-radius: 6px; font: inherit; color: inherit; background: #fff; }
+    textarea { resize: vertical; min-height: 52px; }
+    input[type=text]:focus, textarea:focus { outline: 2px solid #c9c1fb; border-color: #7c6af7; }
+    .hint { font-size: 11.5px; color: #6b7280; margin: -2px 0 8px; }
+    .hint code { background: #f3f2f7; padding: 0 3px; border-radius: 3px; }
+    .buttons { display: grid; gap: 6px; }
+    .buttons button { padding: 8px 10px; border: 1px solid #d9d6e4; border-radius: 7px; background: #fff; font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+    .buttons button:hover:not(:disabled) { border-color: #7c6af7; color: #5b48e0; }
+    .buttons button:disabled { opacity: .5; cursor: default; }
+    select { display: block; width: 100%; margin-top: 3px; padding: 6px 8px; border: 1px solid #d9d6e4; border-radius: 6px; font: inherit; background: #fff; }
+    .brand-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .brand-actions button { padding: 5px 8px; border: 1px solid #d9d6e4; border-radius: 6px; background: #fff; font: inherit; cursor: pointer; }
+    .brand-actions button:hover { border-color: #7c6af7; color: #5b48e0; }
+    .brand-toggles { padding: 8px 10px; background: #f8f7fc; border-radius: 7px; }
+    .brand-toggles label { margin-bottom: 4px; }
+    .brand-toggles small { color: #6b7280; }
+    .status { min-height: 18px; margin-top: 10px; color: #4b5563; }
+    .status.error { color: #b42318; }
+    .notice { margin: 0 0 14px; padding: 8px 10px; background: #fff7e6; border: 1px solid #f5d79e; border-radius: 7px; }
+    .notice button { margin-top: 6px; padding: 4px 8px; border: 1px solid #d9b46a; border-radius: 5px; background: #fff; font: inherit; cursor: pointer; }
+    .paper { flex: 1; min-width: 0; background: #fff; border: 1px solid #e5e3ee; border-radius: 10px; padding: 48px 56px; }
+    .brand-dialog { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid #e5e3ee; border-radius: 12px; padding: 20px 22px; color: #111827; font: 13px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+    .brand-dialog::backdrop { background: rgba(17, 24, 39, .35); }
+    .brand-dialog h2 { font-size: 16px; margin: 0; }
+    .brand-dialog h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin: 18px 0 8px; }
+    .brand-dialog button, .be-browse { padding: 5px 10px; border: 1px solid #d9d6e4; border-radius: 6px; background: #fff; font: inherit; cursor: pointer; display: inline-block; }
+    .brand-dialog button:hover, .be-browse:hover { border-color: #7c6af7; color: #5b48e0; }
+    .brand-dialog button.primary { background: #7c6af7; border-color: #7c6af7; color: #fff; font-weight: 600; }
+    .bd-head, .bd-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .bd-foot { justify-content: flex-end; margin-top: 12px; }
+    .bd-muted { color: #6b7280; }
+    .bv-logo { height: 40px; width: auto; vertical-align: middle; margin-right: 8px; }
+    .bv-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .bv-swatch { display: grid; grid-template-columns: 28px 1fr; column-gap: 8px; align-items: center; }
+    .bv-swatch span { grid-row: span 2; width: 28px; height: 28px; border-radius: 6px; border: 1px solid #e5e3ee; }
+    .bv-swatch code { color: #6b7280; font-size: 12px; }
+    .bv-specimen { padding: 10px 12px; border: 1px solid #eeecf4; border-radius: 8px; margin-bottom: 8px; }
+    .bv-label { color: #6b7280; margin-bottom: 4px; }
+    .bv-fields, .be-fields { width: 100%; border-collapse: collapse; }
+    .bv-fields th, .bv-fields td, .be-fields th, .be-fields td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #f0eef5; vertical-align: middle; }
+    .be-fields input, .be-fields select { width: 100%; margin: 0; padding: 4px 6px; border: 1px solid #d9d6e4; border-radius: 5px; font: inherit; }
+    .be-fields td:nth-child(4) { width: 56px; } .be-fields td:last-child { width: 32px; }
+    .bv-page { border: 1px solid #e5e3ee; border-radius: 6px; padding: 14px 18px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .bv-page-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid; padding-bottom: 6px; font-size: 11px; }
+    .bv-page-head img { height: 22px; }
+    .bv-page-body { padding: 14px 0; }
+    .bv-lines i { display: block; height: 6px; background: #f0eef5; border-radius: 3px; margin-top: 8px; }
+    .bv-lines i:last-child { width: 60%; }
+    .bv-page-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; line-height: 1.5; }
+    .be-colors { display: flex; flex-wrap: wrap; gap: 14px; }
+    .be-colors input { width: 44px; height: 28px; padding: 0; border: 1px solid #d9d6e4; border-radius: 5px; vertical-align: middle; }
+    .be-font { padding: 8px 10px; border: 1px solid #eeecf4; border-radius: 8px; margin-bottom: 8px; }
+    .be-slot { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .be-ok { color: #16794c; font-weight: 600; }
+    .be-notice { min-height: 18px; color: #5b48e0; margin: 10px 0 0; }
+    @media (max-width: 860px) {
+      .layout { flex-direction: column; padding: 16px; }
+      .panel { position: static; width: 100%; max-height: none; }
+      .paper { padding: 24px 16px; width: 100%; }
+    }
+    @media print {
+      body { background: #fff; }
+      .layout { display: block; padding: 0; }
+      .panel { display: none; }
+      .paper { border: 0; padding: 0; border-radius: 0; }
+    }
+  </style>
+  <style id="docStyle"></style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="panel">
+      <div class="logo"><b>cast</b><span>.md</span> export</div>
+
+      <div class="notice" id="imageNotice" hidden>
+        <span id="imageNoticeText"></span>
+        <button id="allowImagesBtn" type="button">Allow image access and retry</button>
+      </div>
+
+      <fieldset>
+        <legend>Metadata</legend>
+        <label>Title <input type="text" id="fTitle"></label>
+        <label>Source URL <input type="text" id="fUrl"></label>
+        <label>Author <input type="text" id="fAuthor"></label>
+        <label>Published <input type="text" id="fPublished"></label>
+        <label>Captured <input type="text" id="fCaptured"></label>
+        <label>Site <input type="text" id="fSite"></label>
+        <label>Description <textarea id="fDescription"></textarea></label>
+        <label>Tags <input type="text" id="fTags"></label>
+        <label class="check"><input type="checkbox" id="fIncludeMeta" checked> Show metadata block at the top</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Brand</legend>
+        <label>Preset
+          <select id="brandSelect"><option value="">None</option></select>
+        </label>
+        <div class="brand-actions">
+          <button id="viewBrandBtn" type="button" hidden>View style</button>
+          <button id="editBrandBtn" type="button" hidden>Edit</button>
+          <button id="newBrandBtn" type="button">New</button>
+          <button id="importBrandBtn" type="button">Import…</button>
+          <button id="exportBrandBtn" type="button" hidden>Export</button>
+          <button id="removeBrandBtn" type="button" hidden>Remove</button>
+          <input type="file" id="brandFile" accept=".json,application/json" hidden>
+        </div>
+        <div id="brandToggles" class="brand-toggles" hidden></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Header and footer (PDF, DOCX)</legend>
+        <label>Header <input type="text" id="fHeader"></label>
+        <label>Footer <input type="text" id="fFooter"></label>
+        <p class="hint">Tokens: <code>{title}</code> <code>{url}</code> <code>{site}</code> <code>{date}</code> <code>{page}</code> <code>{pages}</code>. Leave empty for none.</p>
+      </fieldset>
+
+      <div class="buttons">
+        <button id="htmlBtn" type="button" disabled>Download .html</button>
+        <button id="pdfBtn" type="button" disabled>Save as PDF…</button>
+        <button id="docxBtn" type="button" disabled>Download .docx</button>
+      </div>
+      <p class="hint" style="margin-top:8px">PDF opens Chrome's print dialog: pick "Save as PDF".</p>
+      <div class="status" id="status">Loading…</div>
+    </aside>
+
+    <main class="paper">
+      <article class="castmd-doc" id="doc"></article>
+    </main>
+  </div>
+
+  <dialog id="brandViewer" class="brand-dialog" aria-labelledby="brandViewerTitle"></dialog>
+  <dialog id="brandEditor" class="brand-dialog" aria-labelledby="brandEditorTitle"></dialog>
+
+  <script src="lib/html-to-markdown.js"></script>
+  <script src="lib/export-sanitize.js"></script>
+  <script src="lib/brand-asset-readers.js"></script>
+  <script src="lib/brand-preset.js"></script>
+  <script src="lib/export-document.js"></script>
+  <script src="lib/html-to-docx-inline.js"></script>
+  <script src="lib/html-to-docx-body.js"></script>
+  <script src="lib/html-to-docx-table.js"></script>
+  <script src="lib/docx-image-run.js"></script>
+  <script src="lib/docx-brand-parts.js"></script>
+  <script src="lib/docx-package.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="lib/zip-builder.js"></script>
+  <script src="lib/export-images.js"></script>
+  <script src="export-brand-controls.js"></script>
+  <script src="export-brand-viewer.js"></script>
+  <script src="export-brand-editor.js"></script>
+  <script src="export.js"></script>
+</body>
+</html>

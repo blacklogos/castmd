@@ -30,7 +30,7 @@ test('manifest — MV3, host permission stays optional', () => {
   assert.equal(m.manifest_version, 3);
   assert.equal(m.host_permissions, undefined, 'host_permissions must not ship — it is requested on demand');
   assert.deepEqual(m.optional_host_permissions, ['<all_urls>']);
-  assert.deepEqual(m.permissions.sort(), ['activeTab', 'clipboardWrite', 'contextMenus', 'scripting', 'tabs']);
+  assert.deepEqual(m.permissions.sort(), ['activeTab', 'clipboardWrite', 'contextMenus', 'scripting', 'storage', 'tabs']);
   assert.equal(m.version, JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8')).version);
 });
 
@@ -68,8 +68,13 @@ test('the loaded build is exactly the shipped package', () => {
       ? walk(path.join(dir, e.name), `${prefix}${e.name}/`)
       : [`${prefix}${e.name}`]));
   assert.deepEqual(walk(build.dir).sort(), [
-    'background.js', 'content.js', 'icon128.png', 'icon16.png', 'icon48.png',
-    'lib/confluence-api.js', 'lib/confluence-export.js', 'lib/html-to-markdown.js',
+    'background.js', 'content.js', 'export-brand-controls.js', 'export-brand-editor.js',
+    'export-brand-viewer.js', 'export-capture.js', 'export.html', 'export.js',
+    'icon128.png', 'icon16.png', 'icon48.png',
+    'lib/brand-asset-readers.js', 'lib/brand-preset.js', 'lib/confluence-api.js', 'lib/confluence-export.js', 'lib/docx-brand-parts.js',
+    'lib/docx-image-run.js', 'lib/docx-package.js',
+    'lib/export-document.js', 'lib/export-images.js', 'lib/export-sanitize.js',
+    'lib/html-to-docx-body.js', 'lib/html-to-docx-inline.js', 'lib/html-to-docx-table.js', 'lib/html-to-markdown.js',
     'lib/markdown-to-html.js', 'lib/zip-builder.js', 'manifest.json',
     'md-viewer.css', 'md-viewer.js', 'popup.html', 'popup.js',
     'vendor/LICENSE-jszip.md', 'vendor/jszip.min.js',
@@ -123,7 +128,7 @@ test('popup initializes clean: tab count filled, Confluence section hidden', asy
   assert.deepEqual(state.modeButtons, ['md', 'json', 'xml']);
   assert.deepEqual(state.buttons.sort(), [
     'closePreview', 'confluenceDownloadBtn', 'confluencePreviewBtn', 'copyAllTabsBtn',
-    'copyMdBtn', 'copyOutlineBtn', 'recopyBtn', 'resaveBtn', 'saveAllTabsBtn', 'saveMdBtn',
+    'copyMdBtn', 'copyOutlineBtn', 'exportBtn', 'recopyBtn', 'resaveBtn', 'saveAllTabsBtn', 'saveMdBtn',
   ]);
   assert.deepEqual(errors, []);
   await page.close();

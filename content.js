@@ -341,4 +341,8 @@ function cleanText(text) {
     .replace(/\s+$/, '');
 }
 
+// export-capture.js is injected right after this file into the same isolated
+// world and reuses content detection instead of duplicating it.
+window.__castmd = { findMainContent, shouldSkipElement, findPageTitle };
+
 })();

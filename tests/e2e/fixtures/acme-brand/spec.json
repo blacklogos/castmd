@@ -1,0 +1,13 @@
+{
+  "id": "acme",
+  "name": "Acme",
+  "header": "{title}",
+  "footer": "Page {page} of {pages}",
+  "logo": { "file": "logo.svg", "alt": "Acme" },
+  "colors": { "accent": "#EFC427", "text": "#2A2A2A", "muted": "#6B7280", "tableHeader": "#FFF7CC" },
+  "fields": [
+    { "id": "hq", "label": "HQ", "value": "1 Main Street, Springfield", "line": 1 },
+    { "id": "web", "value": "acme.test", "href": "https://acme.test", "line": 2 },
+    { "id": "email", "value": "hello@acme.test", "href": "mailto:hello@acme.test", "line": 2 }
+  ]
+}

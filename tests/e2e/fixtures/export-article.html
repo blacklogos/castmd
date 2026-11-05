@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Export fixture</title>
+  <meta property="og:title" content="Export Fixture">
+  <meta name="author" content="Jane Writer">
+  <meta name="description" content="A page with pictures, a table and diagrams.">
+  <meta name="keywords" content="castmd, export">
+  <style>.diagram-box { fill: #ffd43b; stroke: #343a40; } .diagram-label { font-size: 14px; }</style>
+</head>
+<body>
+  <nav class="nav"><p>Navigation text that must be skipped from the export</p></nav>
+  <article>
+    <h1>Export Fixture <svg width="16" height="16" viewBox="0 0 16 16"><path d="M0 0h16v16H0z"/></svg></h1>
+    <p>Intro with <strong>bold</strong>, <em>italic</em>, a <a href="/relative/link">relative link</a> and <code>inline_code</code>.</p>
+    <p hidden>Hidden paragraph that must be skipped</p>
+    <figure>
+      <img src="photo.png" alt="Blue photo" width="400" height="200">
+      <figcaption>Figure 1: a blue photo</figcaption>
+    </figure>
+    <p><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" data-src="lazy.png" alt="Lazy image"></p>
+    <h2>Diagram</h2>
+    <svg width="300" height="120" viewBox="0 0 300 120" role="img" aria-label="Flow diagram">
+      <rect class="diagram-box" x="10" y="30" width="120" height="60"/>
+      <text class="diagram-label" x="30" y="65">Capture</text>
+      <rect class="diagram-box" x="170" y="30" width="120" height="60"/>
+      <text class="diagram-label" x="190" y="65">Export</text>
+    </svg>
+    <h2>Chart</h2>
+    <canvas id="chart" width="200" height="100" aria-label="Bar chart"></canvas>
+    <h2>Table</h2>
+    <table>
+      <thead><tr><th>Format</th><th>Feature</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2">PDF</td><td>Header and footer</td></tr>
+        <tr><td>Page numbers</td></tr>
+        <tr><td>DOCX</td><td>Embedded images</td></tr>
+      </tbody>
+    </table>
+    <h2>Lists</h2>
+    <ul><li>first bullet<ul><li>nested bullet</li></ul></li><li>second bullet</li></ul>
+    <ol><li>step one</li><li>step two</li></ol>
+    <pre><code>const answer = 42;
+console.log(answer);</code></pre>
+    <form><input value="form input that must be skipped"></form>
+    <p>Closing paragraph so the container passes the content-length check comfortably.</p>
+  </article>
+  <script>
+    const ctx = document.getElementById('chart').getContext('2d');
+    ctx.fillStyle = '#2f9e44'; ctx.fillRect(20, 40, 40, 60); ctx.fillRect(80, 10, 40, 90);
+  </script>
+</body>
+</html>
