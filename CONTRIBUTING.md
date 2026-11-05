@@ -36,6 +36,8 @@ popup.html / popup.js   Toolbar popup UI — orchestrates user actions
 content.js           Injected into every page — core conversion logic
 background.js        Service worker — context menu, keyboard shortcut
 outline.html / outline.js   Standalone page (extract outline from pasted MD)
+export.html / export.js     Export page: HTML, PDF and DOCX downloads, brand presets
+lib/                 Pure modules (conversion, Confluence, export, DOCX), unit-tested under Node
 index.html           Landing page (deployed to Cloudflare Pages)
 ```
 
@@ -97,7 +99,7 @@ Automated coverage does not replace a look at the real thing:
 
 - Reload the extension at `chrome://extensions/`
 - Open a fresh tab on a page representative of the change
-- Exercise the affected action (Copy MD, Save .md, Copy outline, Copy/Save all tabs, right-click, keyboard shortcut)
+- Exercise the affected action (Copy MD, Save .md, Copy outline, Copy/Save all tabs, Export as HTML/PDF/DOCX, right-click, keyboard shortcut)
 - Test on at least 2–3 different sites if you touched content detection
 - Watch the Chrome DevTools console (popup + page) for errors
 
@@ -129,7 +131,7 @@ gh pr create --title "feat: short description" --body "Closes #N"
 
 - Build tools, bundlers, or transpilers — we want files to stay loadable directly
 - Heavy dependencies — keep the extension small and auditable
-- Features outside the "page → clean Markdown for LLMs" scope
+- Features outside the "web page → clean Markdown, or a clean HTML/PDF/DOCX copy of it" scope
 - Style-only refactors with no functional improvement
 
 ## Releasing (maintainers)

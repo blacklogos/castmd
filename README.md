@@ -16,6 +16,8 @@ A Chrome extension that converts webpages to clean Markdown for LLM workflows. O
 - **Right-click** — "Copy page as Markdown" from any page
 - **Keyboard shortcut** — `Ctrl+Shift+M`
 - **Preview & edit** — Review and tweak output before re-copying or saving
+- **Export as HTML, PDF, DOCX**: Clean copy of the page with pictures, tables, SVG diagrams and canvas charts. Edit the metadata block and the header/footer (`{title}`, `{url}`, `{site}`, `{date}`, `{page}`, `{pages}`) before you download. PDF goes through Chrome's print dialog; DOCX is built in the extension
+- **Brand presets for exports**: Import a `.castmd-brand.json` (or create one in the export page's brand editor) to add a logo, colors, typefaces and contact lines to every export, each part switchable. Fonts are embedded in the DOCX. castmd ships no brands; `scripts/build-brand-file.mjs` builds one from your own logo and font files
 - **Local .md viewer + editor** — Open a `file:///…/*.md` file and it renders as formatted HTML; click Edit to modify it and Save to write back to disk (requires "Allow access to file URLs" on the extension card in `chrome://extensions`). Chrome asks where to save once per page load; the file is overwritten as-is, so close it in other editors first
 
 ## Install
