@@ -1,3 +1,14 @@
+## Unreleased
+
+### New features
+- Export the current page as HTML, PDF or DOCX. A new "Export as HTML, PDF, DOCX" button opens an export page with the cleaned content, pictures, tables, SVG diagrams and canvas charts included
+  - Editable metadata (title, source, author, published, captured, site, description, tags), shown as a block under the title and written into the file (HTML `<meta>` tags, DOCX document properties)
+  - Header and footer templates for PDF and DOCX with `{title}`, `{url}`, `{site}`, `{date}`, `{page}`, `{pages}`
+  - HTML is a single self-contained file (images embedded). PDF goes through Chrome's print dialog. DOCX is built in the extension, no extra library
+- Brand presets for exports: import a `.castmd-brand.json` file once to get a company logo, colors and typefaces, plus contact lines (addresses, website, email) in the header and footer of HTML, PDF and DOCX. Each part has its own on/off switch, and the typefaces are embedded in the DOCX. `scripts/build-brand-file.mjs` builds a brand file from a logo and font files
+- Brand style viewer and editor on the export page. "View style" shows the selected brand's logo, color swatches, type specimens with Vietnamese text, contact fields and a miniature page with its header and footer. "New" and "Edit" open a form: browse for the logo and font files (the font family is read from the file, which is the name Word needs), pick colors, edit contact fields and default templates. "Export" downloads the preset as a `.castmd-brand.json` to share
+- New `storage` permission: hands the capture to the export page through session storage, which Chrome clears when the browser closes
+
 ## v1.5.0 — 2026-09-07
 
 ### Bug fixes

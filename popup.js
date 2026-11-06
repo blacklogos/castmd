@@ -18,6 +18,7 @@ const MODEL_LIMITS = [
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('copyMdBtn').addEventListener('click', handleCopyMd);
   document.getElementById('saveMdBtn').addEventListener('click', handleSaveMd);
+  document.getElementById('exportBtn').addEventListener('click', handleExport);
   document.getElementById('copyOutlineBtn').addEventListener('click', handleCopyOutline);
   document.getElementById('copyAllTabsBtn').addEventListener('click', handleCopyAllTabs);
   document.getElementById('saveAllTabsBtn').addEventListener('click', handleSaveAllTabs);
@@ -85,6 +86,34 @@ async function handleSaveMd() {
     setStatus('Saved', 'success', tokens);
     showModelFit(tokens);
     showPreview(output);
+  } catch (e) {
+    setStatus(e.message, 'error');
+  }
+}
+
+// Captures the page with images, tables and diagrams intact and hands it to the
+// export page (export.html) through chrome.storage.session, which is cleared
+// when the browser closes. Only the latest capture is kept.
+async function handleExport() {
+  setStatus('Capturing page...', 'info');
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js', 'export-capture.js'] });
+    const [{ result }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id }, func: () => window.__castmdCapture(),
+    });
+    if (!result || !result.html) throw new Error('Nothing to export on this page');
+
+    const old = Object.keys(await chrome.storage.session.get(null)).filter(k => k.startsWith('export:'));
+    if (old.length) await chrome.storage.session.remove(old);
+    const id = Date.now().toString(36);
+    try {
+      await chrome.storage.session.set({ ['export:' + id]: result });
+    } catch {
+      throw new Error('Page is too large to export');
+    }
+    await chrome.tabs.create({ url: chrome.runtime.getURL(`export.html?id=${id}`), index: tab.index + 1 });
+    setStatus('Opened export page', 'success');
   } catch (e) {
     setStatus(e.message, 'error');
   }
