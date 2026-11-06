@@ -1,4 +1,4 @@
-## Unreleased
+## v1.6.0 — 2026-11-06
 
 ### New features
 - Export the current page as HTML, PDF or DOCX. A new "Export as HTML, PDF, DOCX" button opens an export page with the cleaned content, pictures, tables, SVG diagrams and canvas charts included
